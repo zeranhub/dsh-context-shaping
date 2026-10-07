@@ -6,6 +6,12 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 > **Naming note.** 0.4.0 renamed the project from `dsh-context-surgery` to `dsh-context-shaping`. Entries for earlier releases have been updated to the current identifiers so copied commands still work; the upstream package this project continues is still published as `@wasd258/dsh-context-surgery`.
 
+## [0.4.2] - 2026-10-07
+
+### Fixed
+
+- **The row never activated because it waited for an injected service this composition does not provide.** A top-level `export const inject = [...]` is a hard dependency: DSH's own startup matrix says a row whose injected service is unavailable "keeps waiting for the dependency" instead of activating, so the Plugin Manager showed the bundle as enabled with the row **not running** and nothing was registered — no `/shape` command, no tools, no buttons. The plugin now declares **no top-level `inject`**: every capability waits for its own service through a scoped `ctx.inject([...], …)`, so a missing service costs only that one capability. The top-level-session guard resolves `agents` lazily and tolerates its absence.
+
 ## [0.4.1] - 2026-10-07
 
 ### Changed

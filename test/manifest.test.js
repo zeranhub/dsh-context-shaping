@@ -32,11 +32,16 @@ test("客户端半边可由 DSH 加载（platform + ./client 导出 + 工厂 id�
 	assert.match(client, new RegExp(`id:\\s*["']${manifest.name.replace(/[/\\]/g, "\\$&")}["']`));
 });
 
-test("宿主半边导出官网要求的三种形式", () => {
+test("宿主半边导出官网要求的形式，且不声明顶层 inject", () => {
 	const index = read("lib/index.js");
 	assert.match(index, /export function apply\(ctx, config/);
-	assert.match(index, /export const inject = \[/);
 	assert.match(index, /export const Config = /);
+	// 顶层 inject 是硬依赖：宿主缺该服务时整行会停在“等待依赖”而永不激活
+	// （DSH 启动失败矩阵原文），因此本插件改为按能力做作用域注入。
+	assert.doesNotMatch(index, /export const inject = \[/);
+	for (const capability of ["commands", "tools", "webServer"]) {
+		assert.match(index, new RegExp(String.raw`each\(\["` + capability + String.raw`"\]`));
+	}
 });
 
 test("清单字段完整（仓库、许可、Node 版本、测试脚本）", () => {
