@@ -6,6 +6,16 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 > **Naming note.** 0.4.0 renamed the project from `dsh-context-surgery` to `dsh-context-shaping`. Entries for earlier releases have been updated to the current identifiers so copied commands still work; the upstream package this project continues is still published as `@wasd258/dsh-context-surgery`.
 
+## [0.4.1] - 2026-10-07
+
+### Changed
+
+- The edit symbol is now a **minimal single-stroke pencil outline** (no underline), and the composer's *Edit mine* control is **icon-only**, matching the host's own copy/branch buttons in the tool row.
+
+### Fixed
+
+- Documented the install properly: a hand-made copy under `$DSH_HOME/profiles/node_modules` is **not** enough — DSH resolves a bundle row from the profile's own `node_modules` (and records it in the profile manifest's `dependencies`), which is what `plugin_manager`'s `install_bundle` arranges. Use the Plugin Manager with the GitHub URL or the package directory, or run pnpm inside `$DSH_HOME/profiles/<profile>`, then restart.
+
 ## [0.4.0] - 2026-10-07
 
 ### Changed

@@ -1,0 +1,241 @@
+
+
+##### install_bundle @14743926 #####
+eepseek-ai/dsh-webhook-github` | yes | Signed GitHub HTTP webhook adapter for the DeepSeek Harness webhook runtime |
+
+## workflow
+
+| Package | Config | Description |
+|---|---|---|
+| `@deepseek-ai/dsh-tool-ralph` | yes | Model-facing fresh-agent Ralph loop over the workflow and subagent seams |
+| `@deepseek-ai/dsh-tool-workflow` | yes | Model-facing workflow tool: run a JavaScript orchestration script over ctx.workflowEngine |
+| `@deepseek-ai/dsh-workflow-ptc` | yes | Workflow orchestration in the shared sandboxed Node PTC runtime |
+
+## workspace
+
+| Package | Config | Description |
+|---|---|---|
+| `@deepseek-ai/dsh-workspace` | no | Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for the DeepSeek Harness |
+---
+name: cordis-plugin-development
+description: Use when designing, reviewing, adding, enabling, disabling, installing, configuring, or debugging a plugin, bundle, feature, page, panel, tool, or MCP connection in the current Harness profile, including a shipped plugin that is disabled by default, and for any visual object, decoration, or widget request that names no other destination, which means an installed UI plugin rendered in the Harness Web UI.
+---
+
+# Persistent Harness plugins
+
+For implementation, use ordinary workspace files to author a bundle, then `plugin_manager` with `action: install_bundle` and the absolute package directory as `target` to install it in the current profile. Changes affect every session in that profile and survive restart. Load `editing-cordis-compositions` for agent preset changes.
+
+Do not write the profile's `package.json` or `cordis.patch.yml`, create packages under `$DSH_HOME`, or run pnpm in the profile directory: `install_bundle` performs those steps, and each hand-made write outside the workspace needs its own approval. Every `plugin_manager` action, including `list_plugins` and `list_bundles`, also needs approval without Full access, so call it only when its result decides the next step.
+
+## Design or review
+
+Read the applicable references below and inspect the proposed or existing plugin against current APIs. Report design choices or findings instead of following the installation workflow. Do not write files, install bundles, or change profile state unless the user requests implementation.
+
+## Enable a shipped plugin
+
+A shipped bundle can resolve a plugin row and leave it `disabled`. The row id and its reason are in the shipped patch, `packages/bundle/*/cordis.patch.yml` in a source checkout. Write a workspace bundle whose patch overrides that row with `disabled: false` and inserts the Host rows it depends on; a source checkout's `apps/cli/config/examples/<feature>/cordis.yml` lists them for opt-in features. Packages shippe
+
+
+##### install_bundle @14744294 #####
+n a JavaScript orchestration script over ctx.workflowEngine |
+| `@deepseek-ai/dsh-workflow-ptc` | yes | Workflow orchestration in the shared sandboxed Node PTC runtime |
+
+## workspace
+
+| Package | Config | Description |
+|---|---|---|
+| `@deepseek-ai/dsh-workspace` | no | Workspace entity registry (ctx.workspaceRegistry): durable workspace records with validated session attachment over the domain data form for the DeepSeek Harness |
+---
+name: cordis-plugin-development
+description: Use when designing, reviewing, adding, enabling, disabling, installing, configuring, or debugging a plugin, bundle, feature, page, panel, tool, or MCP connection in the current Harness profile, including a shipped plugin that is disabled by default, and for any visual object, decoration, or widget request that names no other destination, which means an installed UI plugin rendered in the Harness Web UI.
+---
+
+# Persistent Harness plugins
+
+For implementation, use ordinary workspace files to author a bundle, then `plugin_manager` with `action: install_bundle` and the absolute package directory as `target` to install it in the current profile. Changes affect every session in that profile and survive restart. Load `editing-cordis-compositions` for agent preset changes.
+
+Do not write the profile's `package.json` or `cordis.patch.yml`, create packages under `$DSH_HOME`, or run pnpm in the profile directory: `install_bundle` performs those steps, and each hand-made write outside the workspace needs its own approval. Every `plugin_manager` action, including `list_plugins` and `list_bundles`, also needs approval without Full access, so call it only when its result decides the next step.
+
+## Design or review
+
+Read the applicable references below and inspect the proposed or existing plugin against current APIs. Report design choices or findings instead of following the installation workflow. Do not write files, install bundles, or change profile state unless the user requests implementation.
+
+## Enable a shipped plugin
+
+A shipped bundle can resolve a plugin row and leave it `disabled`. The row id and its reason are in the shipped patch, `packages/bundle/*/cordis.patch.yml` in a source checkout. Write a workspace bundle whose patch overrides that row with `disabled: false` and inserts the Host rows it depends on; a source checkout's `apps/cli/config/examples/<feature>/cordis.yml` lists them for opt-in features. Packages shipped with dsh resolve from the dsh installation, so the bundle declares no dependencies on them. Install it with `install_bundle`.
+
+## Deliver a working plugin first
+
+1. Resolve the requested result and destination. An unspecified visual destination is the current Harness Web UI; a standalone image or HTML file does not complete such a request. Choose reasonable visual
+
+===== install_bundle total 11 =====
+
+
+##### bundlePatchPaths @17644606 #####
+ow site knows which state is intact, and the event loop runs only until the release settles or times out. With that entry point, startup keeps every plugin that can activate. An enabled failed plugin produces a labelled warning. A failed required entry makes startup dispose the whole app and exit nonzero; required ids absent from a profile and disabled required entries do not affect startup. The global required list covers shared Agent execution, application endpoints, and Web bootstrap/transport: `agent-loop`, `webserver`, `modules`, `connection`, `headless-runner`, `acp`, and `sdk-jsonrpc-server`.
+
+<a id="profiles"></a>
+### Profiles
+
+Import profile and bundle declaration types from [`@deepseek-ai/dsh-package-manifest`](../../util/package-manifest/README.md). App-boot adapts `DshPackageManifest` to `ProfileManifest` with optional package identity because local profiles need no published version. App-boot owns profile loading, JSON validation, and resolved runtime data.
+
+A profile is how one dsh installation ships different app surfaces: `web`, `headless`, `acp`, `sdk`, and `sdk-minimal` start distinct compositions from the same launcher. A profile lives at `$DSH_HOME/profiles/<name>` and combines installable bundles with its own `cordis.patch.yml`. A bundle's `dsh.bundle.patch` names one patch file or an ordered list of files; `bundlePatchFiles` validates the declaration and `bundlePatchPaths` resolves it to absolute paths; the layer concatenates their patch lists in that order. The YAML composition enables or disables HMR. The shipped `web` template uses live reload, while the other shipped templates apply patches only at startup. `sdk-minimal` names only its standalone bundle; the other templates retain base-plus-mode stacks. `dsh --profile <name> --from-default-profile <template>` creates a custom profile at a new non-shipped name from one shipped template, while `dsh plugin` initializes a base-backed profile and manages its installed bundles. Bundle resolution, manifest, and patch-loading failures skip that bundle without changing its selection; the loaded profile lists each skip in `skippedBundles`, and the launcher prints them once per start with `reportSkippedBundles`. Remaining bundles keep their order; profile and user-patch errors still fail startup. Skipping a bundle does not guarantee that the remaining composition can provide the required services. Application-owned npm projects, such as Electron's reserved Desktop profile, use `loadProfileDirectory` to load an already initialized directory without exposing it through CLI profile lookup.
+
+Before a profile imports a plugin, DSH checks its `peerDependencies` on `@deepseek-ai/dsh` and `@deepseek-ai/dsh-*` against the single runtime version returned by `getDshRuntimeVersion()`. Every declar
+
+
+##### bundlePatchPaths @17677435 #####
+��出；控制流不会回到失败的操作，因为只有抛出点知道哪些状态仍然完整，事件循环只运行到 release 结束或超时。有了这个入口，启动会保留所有能够激活的插件。启用但失败的插件会产生带标签的警告。required entry 失败时，启动会拆卸整个应用并以非零码退出；profile 中不存在的 required id 和已禁用的 required entry 不影响启动。全局 required list 覆盖共享 Agent 执行、应用 endpoint，以及 Web 启动与传输：`agent-loop`、`webserver`、`modules`、`connection`、`headless-runner`、`acp` 和 `sdk-jsonrpc-server`。
+
+<a id="profiles"></a>
+### Profile
+
+Profile 与组合包的声明类型从 [`@deepseek-ai/dsh-package-manifest`](../../util/package-manifest/README.zh.md) 导入。App-boot 将 `DshPackageManifest` 适配为包身份可选的 `ProfileManifest`，因为本地 profile 无需发布版本。App-boot 负责 profile 加载、JSON 校验和解析后的运行时数据。
+
+profile 是同一套 dsh 安装提供不同应用界面的方式：`web`、`headless`、`acp`、`sdk` 与 `sdk-minimal` 从同一 launcher 启动不同组合。profile 位于 `$DSH_HOME/profiles/<name>`，由可安装组合包和自身 `cordis.patch.yml` 组成。组合包的 `dsh.bundle.patch` 指定一个 patch 文件或一个有序的文件列表；`bundlePatchFiles` 校验该声明，`bundlePatchPaths` 把它解析为绝对路径；该层按此顺序拼接各文件的 patch 列表。YAML 组合决定是否启用 HMR。随产品交付的 `web` 模板实时重载，其他随附模板只在启动时应用 patch。`sdk-minimal` 只列出自身的独立组合包，其他模板保留 base 加模式的组合包栈。`dsh --profile <name> --from-default-profile <template>` 从一个随附模板，在新的非内置名称处创建自定义 profile；`dsh plugin` 则初始化以 base 为基础的 profile，并管理其中安装的组合包。组合包解析、manifest 读取或 patch 加载失败时会跳过该组合包，不改变其选择状态；加载结果在 `skippedBundles` 中列出每个被跳过的组合包，启动器每次启动时通过 `reportSkippedBundles` 输出一次。其余组合包保持原顺序；profile 和用户 patch 错误仍会导致启动失败。跳过组合包不保证剩余组合能够提供所需服务。由应用持有的 npm 项目（例如 Electron 保留的 Desktop profile）通过 `loadProfileDirectory` 加载已经初始化的目录，而不会将它暴露给 CLI profile 查找。
+
+profile 导入插件前，DSH 会检查其 `peerDependencies` 中对 `@deepseek-ai/dsh` 和 `@deepseek-ai/dsh-*` 的依赖，与 `getDshRuntimeVersion()` 返回的唯一运行时版本比较。每个声明的版本范围都必须匹配；预发布版�
+
+===== bundlePatchPaths total 18 =====
+
+
+##### packageDirFromAnchor @17736233 #####
+dependency graph. */
+function readPackageManifest(anchor) {
+	return JSON.parse(readFileSync(anchor, "utf8"));
+}
+/** Return dependency names that may be imported by a loader-visible plugin. */
+function profileDependencyNames(manifest) {
+	return [...Object.keys(manifest.dependencies ?? {}), ...Object.keys(manifest.peerDependencies ?? {})];
+}
+/** Resolve the installation packages that the runtime resolver supplies to every profile. */
+function collectInstallationScopePackages(installAnchor, skippedBundles) {
+	const canonicalAnchor = join(realModuleDirectory(dirname(installAnchor)), basename(installAnchor));
+	const appManifest = readPackageManifest(canonicalAnchor);
+	const links = /* @__PURE__ */ new Map();
+	const declarers = /* @__PURE__ */ new Map();
+	const versions = /* @__PURE__ */ new Map();
+	/* v8 ignore next -- a real app manifest always declares its name */
+	if (appManifest.name !== void 0) {
+		links.set(appManifest.name, dirname(installAnchor));
+		declarers.set(appManifest.name, canonicalAnchor);
+		versions.set(appManifest.name, appManifest.version);
+	}
+	const queue = [{
+		anchor: canonicalAnchor,
+		manifest: appManifest
+	}];
+	for (let next = queue.shift(); next !== void 0; next = queue.shift())
+ /* v8 ignore next -- a real app manifest always declares dependencies */
+	for (const dep of profileDependencyNames(next.manifest)) {
+		if (links.has(dep)) continue;
+		const dir = packageDirFromAnchor(next.anchor, dep);
+		if (dir === void 0) continue;
+		const manifestPath = join(realModuleDirectory(dir), "package.json");
+		let manifest;
+		try {
+			manifest = skippedBundles.has(dep) ? readProfileManifest("dsh", dir) : readPackageManifest(manifestPath);
+		} catch (error) {
+			if (!skippedBundles.has(dep)) throw error;
+			continue;
+		}
+		links.set(dep, dir);
+		declarers.set(dep, next.anchor);
+		versions.set(dep, manifest.version);
+		queue.push({
+			anchor: manifestPath,
+			manifest
+		});
+	}
+	return {
+		packageNames: new Set(links.keys()),
+		packageDirs: links,
+		declarers,
+		versions
+	};
+}
+/**
+* Compute the runtime resolution without writing module-resolution files.
+* @param options - installation anchor, optional loaded profile, and Harness home.
+* @returns the complete immutable runtime resolution.
+*/
+async function createRuntimeResolution(options) {
+	const { installAnchor, profile, home = resolveDshHome() } = options;
+	const profilesDir = join(home, PROFILES_DIR);
+	const manifest = readOptionalProfileManifest(profile);
+	const { packageNames, packageDirs, declarers, versions } = collectInstallationScopePackages(installAnchor, new Set(profile?.skippedBundles.map((skipped) => skipped.packageName)));
+	const profileDeclarers = /* @__PURE__ */ new Map();
+	const profileVersions = /* @__PURE__ */ new Map();
+	const localPackageNames = profile === void 0 ? [] : in
+
+
+##### packageDirFromAnchor @17740312 #####
+lled direct dependencies that Node resolves before profile fallback. */
+function installedProfilePackageNames(profile, manifest) {
+	if (manifest === void 0) return [];
+	return profileDependencyNames(manifest).filter((name) => existsSync(join(profile.dir, "node_modules", name, "package.json")));
+}
+/** Collect the first resolvable package directory for each dependency name. */
+function dependencyClosure(anchors, reserved, declarers, versions) {
+	const links = /* @__PURE__ */ new Map();
+	const visited = new Set(reserved);
+	for (const anchor of anchors) {
+		const canonicalAnchor = join(realModuleDirectory(dirname(anchor)), basename(anchor));
+		const manifest = readPackageManifest(canonicalAnchor);
+		/* v8 ignore next -- an installable package manifest always declares its name */
+		if (manifest.name === void 0) continue;
+		if (!visited.has(manifest.name)) {
+			visited.add(manifest.name);
+			links.set(manifest.name, dirname(canonicalAnchor));
+			declarers?.set(manifest.name, canonicalAnchor);
+			versions?.set(manifest.name, manifest.version);
+		}
+		const queue = [{
+			anchor: canonicalAnchor,
+			manifest
+		}];
+		for (let next = queue.shift(); next !== void 0; next = queue.shift())
+ /* v8 ignore next -- an installable package manifest always declares dependencies or peers */
+		for (const dep of profileDependencyNames(next.manifest)) {
+			if (visited.has(dep)) continue;
+			const dir = packageDirFromAnchor(next.anchor, dep);
+			if (dir === void 0) continue;
+			visited.add(dep);
+			links.set(dep, dir);
+			declarers?.set(dep, next.anchor);
+			const manifestPath = join(realModuleDirectory(dir), "package.json");
+			const dependencyManifest = readPackageManifest(manifestPath);
+			versions?.set(dep, dependencyManifest.version);
+			queue.push({
+				anchor: manifestPath,
+				manifest: dependencyManifest
+			});
+		}
+	}
+	return links;
+}
+/** Collect packages carried by the profile's selected bundles that the installation does not supply. */
+function collectProfileScopePackages(profile, installationPackageNames, declarers, versions) {
+	const bundleLinks = dependencyClosure(profile.layers.filter((layer) => !installationPackageNames.has(layer.packageName)).map((layer) => join(layer.packageDir, "package.json")), installationPackageNames, declarers, versions);
+	for (const layer of profile.layers) bundleLinks.delete(layer.packageName);
+	return bundleLinks;
+}
+/**
+* Read a profile's manifest.
+* @param binName - the diagnostic prefix on the thrown error.
+* @param dir - the profile directory.
+* @returns the parsed manifest.
+*/
+function readProfileManifest(binName, dir) {
+	const path = join(dir, "package.json");
+	let raw;
+	try {
+		raw = readFileSync(path, "utf8");
+	} catch (error) {
+		throw new Error(`${binName}: failed to read profile manifest ${path}: ${String(error)}`);
+	}
+	cons
+
+===== packageDirFromAnchor total 4 =====
+
+===== selectedBundles total 0 =====

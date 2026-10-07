@@ -1,0 +1,149 @@
+
+===== "plugin_manager" total 0 =====
+
+
+##### installBundle @15782273 #####
+("registry"),
+				literal("path"),
+				literal("git"),
+				literal("tarball")
+			]).readonly(),
+			"name": string().readonly().optional(),
+			"version": string().readonly().optional(),
+			"description": string().readonly().optional(),
+			"bundle": union([
+				literal(null),
+				literal(false),
+				literal(true)
+			]).readonly(),
+			"registry": union([literal(null), string()]).readonly(),
+			"host": string().readonly().optional()
+		}), object({
+			"status": literal("refused").readonly(),
+			"problem": union([
+				literal("network"),
+				literal("unknown"),
+				literal("invalid-spec"),
+				literal("not-found"),
+				literal("already-installed"),
+				literal("not-a-package"),
+				literal("not-a-bundle")
+			]).readonly(),
+			"reason": string().readonly(),
+			"registries": array(union([literal(null), string()])).readonly().optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value ??= string();
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value ??= union([_undefined(), object({
+			"enabled": boolean().optional(),
+			"requestId": intersection(string(), unknown()).optional(),
+			"approvedBuilds": array(string()).optional(),
+			"registry": union([literal(null), string()]).optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value ??= object({
+			"changed": boolean(),
+			"application": union([
+				literal("cancelled"),
+
+
+##### installBundle @15782367 #####
+,
+			"name": string().readonly().optional(),
+			"version": string().readonly().optional(),
+			"description": string().readonly().optional(),
+			"bundle": union([
+				literal(null),
+				literal(false),
+				literal(true)
+			]).readonly(),
+			"registry": union([literal(null), string()]).readonly(),
+			"host": string().readonly().optional()
+		}), object({
+			"status": literal("refused").readonly(),
+			"problem": union([
+				literal("network"),
+				literal("unknown"),
+				literal("invalid-spec"),
+				literal("not-found"),
+				literal("already-installed"),
+				literal("not-a-package"),
+				literal("not-a-bundle")
+			]).readonly(),
+			"reason": string().readonly(),
+			"registries": array(union([literal(null), string()])).readonly().optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value ??= string();
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value ??= union([_undefined(), object({
+			"enabled": boolean().optional(),
+			"requestId": intersection(string(), unknown()).optional(),
+			"approvedBuilds": array(string()).optional(),
+			"registry": union([literal(null), string()]).optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value ??= object({
+			"changed": boolean(),
+			"application": union([
+				literal("cancelled"),
+				literal("failed"),
+				literal("applied"),
+				literal("restart-required"),
+				literal("
+
+
+##### installBundle @15782454 #####
+(),
+			"description": string().readonly().optional(),
+			"bundle": union([
+				literal(null),
+				literal(false),
+				literal(true)
+			]).readonly(),
+			"registry": union([literal(null), string()]).readonly(),
+			"host": string().readonly().optional()
+		}), object({
+			"status": literal("refused").readonly(),
+			"problem": union([
+				literal("network"),
+				literal("unknown"),
+				literal("invalid-spec"),
+				literal("not-found"),
+				literal("already-installed"),
+				literal("not-a-package"),
+				literal("not-a-bundle")
+			]).readonly(),
+			"reason": string().readonly(),
+			"registries": array(union([literal(null), string()])).readonly().optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_0$schema$value ??= string();
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_parameter_1$schema$value ??= union([_undefined(), object({
+			"enabled": boolean().optional(),
+			"requestId": intersection(string(), unknown()).optional(),
+			"approvedBuilds": array(string()).optional(),
+			"registry": union([literal(null), string()]).optional()
+		})]);
+		let _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value;
+		const _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema = () => _deepseek_ai_dsh_plugin_manager_pluginManager_installBundle_result$schema$value ??= object({
+			"changed": boolean(),
+			"application": union([
+				literal("cancelled"),
+				literal("failed"),
+				literal("applied"),
+				literal("restart-required"),
+				literal("overridden")
+			]),
+			"stage": union([
+				literal("remove"),
+				literal("install"),
+
+
+===== installBundle total 68 =====
+
+===== targetProfile total 0 =====
+
+===== bundleDir total 0 =====
