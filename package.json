@@ -1,0 +1,70 @@
+{
+  "name": "dsh-context-surgery",
+  "version": "0.2.0",
+  "description": "Surgical rewriting of the model-visible conversation history of a DSH session (surface replacement), with an audit trail and undo. 上下文手术刀：强制改写会话的模型可见历史，回复与思考链分开编辑，并带改写审计与还原。",
+  "type": "module",
+  "main": "lib/index.js",
+  "exports": {
+    ".": {
+      "default": "./lib/index.js"
+    },
+    "./client": "./lib/client.js",
+    "./cordis.patch.yml": "./cordis.patch.yml",
+    "./locale/*.json": "./locale/*.json",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "lib/",
+    "cordis.patch.yml",
+    "locale/*.json",
+    "README.md",
+    "README.zh-CN.md",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web",
+      "immediately": true,
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-slots",
+        "@deepseek-ai/dsh-client-ui-conversation"
+      ]
+    }
+  },
+  "scripts": {
+    "test": "node --test",
+    "check": "node --check lib/index.js && node --check lib/ops.js && node --check lib/core.js && node --check lib/client.js",
+    "prepublishOnly": "npm run check && npm test"
+  },
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "dsh-bundle",
+    "deepseek-harness",
+    "deepseek",
+    "cordis",
+    "context",
+    "context-surgery",
+    "history",
+    "surface"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zeranhub/dsh-context-surgery.git"
+  },
+  "homepage": "https://github.com/zeranhub/dsh-context-surgery#readme",
+  "bugs": {
+    "url": "https://github.com/zeranhub/dsh-context-surgery/issues"
+  }
+}

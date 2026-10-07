@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Context Surgery",
+    "description": "Rewrite the model-visible history of a session: edit a reply or its reasoning chain, delete a message, and undo any rewrite, with an audit trail."
+  }
+}
