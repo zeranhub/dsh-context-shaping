@@ -1,0 +1,39 @@
+dsh-context-surgery is a community plugin for DeepSeek Harness.
+
+The implementation references the session surface replacement mechanism (dsh-session surface subsystem, the same seam compaction summaries use) of DeepSeek Harness:
+
+  https://github.com/deepseek-ai/deepseek-harness
+  commit 47f943859bef60e4160492346772ded9b24f765a
+
+DeepSeek Harness is distributed under the MIT License:
+
+  Copyright (c) 2026 DeepSeek
+
+The full MIT permission notice is included in this repository's LICENSE file.
+
+DeepSeek and DeepSeek Harness are names of their respective owner. This
+community project is not affiliated with or endorsed by DeepSeek.
+
+--------------------------------------------------------------------------
+
+Continuation (0.2.0 and later)
+
+This repository continues the community plugin @wasd258/dsh-context-surgery
+(versions 0.1.0-0.1.2, published on npm by WASD258-jpg), whose upstream
+repository is no longer available. It is not an original work.
+
+  Original work:      Copyright (c) 2026 WASD258-jpg - MIT
+  Continuation:       Copyright (c) 2026 zeranhub - MIT
+
+Attribution and the MIT notice for the original work are preserved above and
+are not superseded: the original text of this NOTICE is kept verbatim, and the
+MIT license applies to the original work and to this continuation alike.
+
+The original author has not reviewed, sponsored or endorsed this continuation,
+and is not responsible for changes made here. Changes since 0.1.2 - the audit
+trail, restore/undo, the configuration schema, the top-level session guard and
+the fixes listed in CHANGELOG.md - are the responsibility of the maintainers of
+this repository.
+
+DeepSeek and DeepSeek Harness are names of their respective owner. This
+community project is not affiliated with, sponsored or endorsed by DeepSeek.
