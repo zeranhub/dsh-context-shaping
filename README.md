@@ -22,22 +22,22 @@ Open the plugins page in DSH (Plugin Manager) and install this bundle — `plugi
 
 ### Manual
 
+Run pnpm **inside the profile directory** (the DSH app ships one at `resources/runtime/pnpm/bin/pnpm.cjs` if you have none on `PATH`):
+
 ```sh
-cd ~/.dsh/profiles
-npm install --no-save github:zeranhub/dsh-context-shaping
+cd ~/.dsh/profiles/<profile>          # desktop for the desktop app, web for `dsh web`
+pnpm add github:zeranhub/dsh-context-shaping
 ```
 
-`--no-save` matters: the profiles root has no `package.json`, and without it npm writes one (with a `package-lock.json`) into that directory. With `--no-save` only `node_modules/dsh-context-shaping` appears.
-
-Or clone the repository straight into the module directory: `git clone https://github.com/zeranhub/dsh-context-shaping ~/.dsh/profiles/node_modules/dsh-context-shaping`.
-
-Then add the package name to the profile's `dsh.profile.bundles` in `~/.dsh/profiles/<profile>/package.json` (`<profile>` is `desktop` for the desktop app, `web` for `dsh web`):
+That is what `install_bundle` does: the package lands in the **profile's own** `node_modules`, and the profile manifest records it as a dependency:
 
 ```json
 {
   "name": "dsh-profile-desktop",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "dsh-context-shaping": "github:zeranhub/dsh-context-shaping"
+  },
   "dsh": {
     "profile": {
       "bundles": [
@@ -49,6 +49,10 @@ Then add the package name to the profile's `dsh.profile.bundles` in `~/.dsh/prof
   }
 }
 ```
+
+If `dsh-context-shaping` is not in `dsh.profile.bundles` after the install, add it — that list is what inserts the plugin row.
+
+> **A copy next to the profile is not enough.** Dropping the package into `~/.dsh/profiles/node_modules` (the parent directory) and only editing `dsh.profile.bundles` loads nothing: DSH resolves a bundle row through the profile's own dependency tree, so the package must be in `~/.dsh/profiles/<profile>/node_modules` and declared in that manifest's `dependencies`.
 
 On Windows `~/.dsh` is `%USERPROFILE%\.dsh` (or `$DSH_HOME`).
 

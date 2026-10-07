@@ -22,22 +22,22 @@
 
 ### 手动安装
 
+在 **profile 目录里**运行 pnpm（PATH 上没有的话，DSH 自带一个：`resources/runtime/pnpm/bin/pnpm.cjs`）：
+
 ```sh
-cd ~/.dsh/profiles
-npm install --no-save github:zeranhub/dsh-context-shaping
+cd ~/.dsh/profiles/<profile>          # 桌面应用是 desktop，dsh web 是 web
+pnpm add github:zeranhub/dsh-context-shaping
 ```
 
-`--no-save` 不能省：profiles 根目录本身没有 `package.json`，不加它 npm 会在这里自己生成一份 `package.json`（把依赖写进去）和 `package-lock.json`；加上 `--no-save` 就只写入 `node_modules/dsh-context-shaping`，目录保持干净。
-
-也可以直接把仓库克隆进模块目录：`git clone https://github.com/zeranhub/dsh-context-shaping ~/.dsh/profiles/node_modules/dsh-context-shaping`。
-
-然后把包名加进 profile 的 `dsh.profile.bundles`（文件：`~/.dsh/profiles/<profile>/package.json`，`<profile>` 桌面应用是 `desktop`，`dsh web` 是 `web`）：
+这正是 `install_bundle` 做的事：包装进 **profile 自己的** `node_modules`，并在 profile 清单里登记为依赖：
 
 ```json
 {
   "name": "dsh-profile-desktop",
   "private": true,
-  "dependencies": {},
+  "dependencies": {
+    "dsh-context-shaping": "github:zeranhub/dsh-context-shaping"
+  },
   "dsh": {
     "profile": {
       "bundles": [
@@ -49,6 +49,10 @@ npm install --no-save github:zeranhub/dsh-context-shaping
   }
 }
 ```
+
+装完后如果 `dsh-context-shaping` 不在 `dsh.profile.bundles` 里，手动补上——正是这个列表把插件行插入组合。
+
+> **只放在 profile 旁边不算数。** 把包丢进 `~/.dsh/profiles/node_modules`（上一级目录）并只改 `dsh.profile.bundles` 是什么都不会加载的：DSH 通过 profile 自己的依赖树解析 bundle 行，包必须位于 `~/.dsh/profiles/<profile>/node_modules`，并在该清单的 `dependencies` 里登记。
 
 Windows 上 `~/.dsh` 即 `%USERPROFILE%\.dsh`（或 `$DSH_HOME`）。
 
