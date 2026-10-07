@@ -20,17 +20,17 @@ This plugin deliberately hands out the ability to change what a model believes t
 
 ### 1. The HTTP API has no authentication
 
-`/api/dsh-context-surgery` serves loopback clients only, requires a loopback `Host` header on the current port (DNS-rebinding defence), rejects cross-origin `POST`s, insists on `Content-Type: application/json`, and caps request bodies at 256 KiB. None of that **authenticates** the caller:
+`/api/dsh-context-shaping` serves loopback clients only, requires a loopback `Host` header on the current port (DNS-rebinding defence), rejects cross-origin `POST`s, insists on `Content-Type: application/json`, and caps request bodies at 256 KiB. None of that **authenticates** the caller:
 
 - **Any local process can read the session** — including reasoning chains — and drive rewrites through `POST /edit`, `/delete`, `/replace` and `/restore`.
 - A local reverse proxy or tunnel makes remote callers look like `127.0.0.1`; the plugin cannot tell the difference.
 - `httpWrite: false` makes the API read-only. `httpEnabled: false` removes the routes entirely.
 
-The web GUI's per-message buttons use this API, so both settings disable those buttons too; `/context` and the model tools keep working.
+The web GUI's per-message buttons use this API, so both settings disable those buttons too; `/shape` and the model tools keep working.
 
 ### 2. The model tools let a prompt-injected model hide its own history
 
-`exposeTools: true` (default) registers `context_list`, `context_edit`, `context_delete`, `context_replace`, `context_history` and `context_restore` for the model. A model steered by untrusted input can rewrite or delete messages — including the records of its own tool calls — and, with `part=all`, turn a message into a user-role turn that renders as a user message.
+`exposeTools: true` (default) registers `shape_list`, `shape_edit`, `shape_delete`, `shape_replace`, `shape_history` and `shape_restore` for the model. A model steered by untrusted input can rewrite or delete messages — including the records of its own tool calls — and, with `part=all`, turn a message into a user-role turn that renders as a user message.
 
 The defaults are on the safe side: `allowToolNodes: false` refuses destructive operations on messages that carry tool calls, and `allowModelRoleChange: false` stops the model from changing a message's role at all. `exposeTools: false` removes the tools entirely.
 
@@ -39,8 +39,8 @@ The defaults are on the safe side: `allowToolNodes: false` refuses destructive o
 Rewrites shadow nodes rather than erasing them:
 
 - The original text stays in the append-only event log, and the plugin never modifies the log in place.
-- Every rewrite is recorded in the audit trail (`/context history`, `context_history`, `GET /history`) with who did it (`command`, `tool`, `http`, or `recovered` from the log), which nodes were shadowed, and the replacement node's id.
-- Rewrites can be restored (`/context undo`, `context_restore`, `POST /restore`, ↩️).
+- Every rewrite is recorded in the audit trail (`/shape history`, `shape_history`, `GET /history`) with who did it (`command`, `tool`, `http`, or `recovered` from the log), which nodes were shadowed, and the replacement node's id.
+- Rewrites can be restored (`/shape undo`, `shape_restore`, `POST /restore`, ↩️).
 
 Audit and describe responses include short previews of the shadowed originals; the full originals live only in the log. None of this protects against someone who can already read the DSH home directory.
 

@@ -7,7 +7,7 @@ import {
 	messageText,
 	normalizePart,
 	normalizeRole,
-	parseContextCommand,
+	parseShapeCommand,
 	parseSeq,
 	preview,
 	textAfter,
@@ -106,10 +106,10 @@ test("回归：文本与 seq 相同时不再截错", () => {
 	assert.equal(textAfter("edit 5", 2), "");
 });
 
-test("parseContextCommand 解析子命令", () => {
-	assert.deepEqual(parseContextCommand(""), { op: "", args: [] });
-	assert.deepEqual(parseContextCommand("  list  "), { op: "list", args: ["list"] });
-	assert.deepEqual(parseContextCommand("replace 3 4 user hi"), { op: "replace", args: ["replace", "3", "4", "user", "hi"] });
+test("parseShapeCommand 解析子命令", () => {
+	assert.deepEqual(parseShapeCommand(""), { op: "", args: [] });
+	assert.deepEqual(parseShapeCommand("  list  "), { op: "list", args: ["list"] });
+	assert.deepEqual(parseShapeCommand("replace 3 4 user hi"), { op: "replace", args: ["replace", "3", "4", "user", "hi"] });
 });
 
 test("校验函数拒绝非法输入", () => {

@@ -16,7 +16,7 @@ test("包声明了 bundle 补丁，且补丁文件存在", () => {
 test("补丁把包自身插入组合（id + name 与清单一致）", () => {
 	const patch = read("cordis.patch.yml");
 	assert.match(patch, /^-\s*insert:/m, "补丁必须是 insert 列表");
-	assert.match(patch, /id:\s*context-surgery/);
+	assert.match(patch, /id:\s*context-shaping/);
 	assert.ok(
 		patch.includes(`name: '${manifest.name}'`) || patch.includes(`name: "${manifest.name}"`),
 		"补丁的 name 必须等于包名"
@@ -43,7 +43,7 @@ test("清单字段完整（仓库、许可、Node 版本、测试脚本）", () 
 	assert.equal(manifest.type, "module");
 	assert.equal(manifest.main, "lib/index.js");
 	assert.equal(manifest.license, "MIT");
-	assert.match(manifest.repository.url, /zeranhub\/dsh-context-surgery/);
+	assert.match(manifest.repository.url, /zeranhub\/dsh-context-shaping/);
 	assert.match(manifest.engines.node, />=22\.19\.0/);
 	assert.equal(manifest.scripts.test, "node --test");
 	assert.ok(manifest.keywords.includes("dsh-plugin"));

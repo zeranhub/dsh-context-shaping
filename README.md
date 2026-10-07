@@ -1,12 +1,12 @@
-# dsh-context-surgery
+# dsh-context-shaping
 
-Surgical rewriting of the **model-visible conversation history** of a running DeepSeek Harness (DSH) session.
+Interactive **behavioral shaping** for a running DeepSeek Harness (DSH) session: rewriting its **model-visible conversation history** in place.
 
-Edit a reply and its reasoning chain separately, delete a message, replace a whole exchange — the model's next request reads the edited history as if it had always been that way. Each rewrite shadows the old nodes instead of erasing them, so the original text stays in the append-only event log, every rewrite is recorded in an audit trail, and rewrites can be undone.
+Edit a reply and its reasoning chain separately, delete a message, replace a whole exchange — the model's next request reads the shaped history as if it had always been that way, so the conversation continues along the shape you set. Each rewrite shadows the old nodes instead of erasing them, so the original text stays in the append-only event log, every rewrite is recorded in an audit trail, and rewrites can be undone.
 
 > Community plugin — not affiliated with or endorsed by DeepSeek. It is a continuation of `@wasd258/dsh-context-surgery` 0.1.0–0.1.2 (© 2026 WASD258-jpg, MIT); see [License & attribution](#license--attribution).
 
-Version 0.2.0 · MIT · Node.js >= 22.19.0 · requires a DSH web profile
+Version 0.4.0 · MIT · Node.js >= 22.19.0 · requires a DSH web profile
 
 ## Requirements
 
@@ -24,12 +24,12 @@ Open the plugins page in DSH (Plugin Manager) and install this bundle — `plugi
 
 ```sh
 cd ~/.dsh/profiles
-npm install --no-save github:zeranhub/dsh-context-surgery
+npm install --no-save github:zeranhub/dsh-context-shaping
 ```
 
-`--no-save` matters: the profiles root has no `package.json`, and without it npm writes one (with a `package-lock.json`) into that directory. With `--no-save` only `node_modules/dsh-context-surgery` appears.
+`--no-save` matters: the profiles root has no `package.json`, and without it npm writes one (with a `package-lock.json`) into that directory. With `--no-save` only `node_modules/dsh-context-shaping` appears.
 
-Or clone the repository straight into the module directory: `git clone https://github.com/zeranhub/dsh-context-surgery ~/.dsh/profiles/node_modules/dsh-context-surgery`.
+Or clone the repository straight into the module directory: `git clone https://github.com/zeranhub/dsh-context-shaping ~/.dsh/profiles/node_modules/dsh-context-shaping`.
 
 Then add the package name to the profile's `dsh.profile.bundles` in `~/.dsh/profiles/<profile>/package.json` (`<profile>` is `desktop` for the desktop app, `web` for `dsh web`):
 
@@ -43,7 +43,7 @@ Then add the package name to the profile's `dsh.profile.bundles` in `~/.dsh/prof
       "bundles": [
         "@deepseek-ai/dsh-base",
         "@deepseek-ai/dsh-web-app",
-        "dsh-context-surgery"
+        "dsh-context-shaping"
       ]
     }
   }
@@ -58,13 +58,13 @@ Restart DSH and reload the page so the client module (`lib/client.js`) is loaded
 
 ### Upgrading from 0.1.x
 
-0.2.0 renames the package from the scoped `@wasd258/dsh-context-surgery` to the unscoped `dsh-context-surgery` and adds the `dsh.bundle.patch` declaration that 0.1.x lacked. To migrate:
+Two renames happened on the way here: 0.2.0 moved the scoped upstream package `@wasd258/dsh-context-surgery` to the unscoped `dsh-context-surgery` and added the `dsh.bundle.patch` declaration that 0.1.x lacked, and **0.4.0 renamed the project again, to `dsh-context-shaping`**. To migrate:
 
-1. remove `@wasd258/dsh-context-surgery` from `dsh.profile.bundles` in your profile manifest and delete `~/.dsh/profiles/node_modules/@wasd258/dsh-context-surgery`;
-2. install this package as above, with `dsh-context-surgery` in the bundle list;
+1. remove the old entry from `dsh.profile.bundles` in your profile manifest and delete the old module directory — `@wasd258/dsh-context-surgery` (0.1.x) and/or `dsh-context-surgery` (0.2.0/0.3.0);
+2. install this package as above, with `dsh-context-shaping` in the bundle list;
 3. restart DSH.
 
-Leaving the old entry in place is harmless but pointless — DSH skips it and prints a line about it at startup. Rewrite records held in memory are per-process; after a restart `/context history` still lists rewrites recovered from the durable log, without their original timestamps.
+Leaving the old entry in place is harmless but pointless — DSH skips it and prints a line about it at startup. Rewrite records held in memory are per-process; after a restart `/shape history` still lists rewrites recovered from the durable log, without their original timestamps.
 
 ## Usage
 
@@ -92,22 +92,22 @@ The AI's buttons are per-message; your own messages have no action row a plugin 
 2. change the text and press **Save**;
 3. the message is rewritten in the model-visible history — **nothing is sent**, no new turn starts, and the next model request reads the edited text.
 
-### `/context` command
+### `/shape` command
 
-`/context` on its own (or `/context list`) prints the current model-visible nodes — the last 10, as `[seq] AI|TOOL|YOU <preview>`, with rewritten nodes marked — followed by the usage list.
+`/shape` on its own (or `/shape list`) prints the current model-visible nodes — the last 10, as `[seq] AI|TOOL|YOU <preview>`, with rewritten nodes marked — followed by the usage list.
 
 | Command | Effect |
 |---|---|
-| `/context`, `/context list`, `ls`, `?` | List the current model-visible nodes (last 10) with `seq`, role badge and a 120-character preview. |
-| `/context show <seq>` | Print one node's full reply and reasoning chain (and whether it carries tool blocks). |
-| `/context edit <seq> <text>` | Rewrite the reply text only; reasoning chain and tool calls are kept. |
-| `/context think <seq> <text>` | Rewrite the reasoning chain only; the reply text is kept. |
-| `/context clear-think <seq>` | Remove the reasoning chain. |
-| `/context rewrite <seq> <user\|assistant> <text>` | Rewrite the whole node as plain text (`part=all`). This is the only command that may change a node's role. |
-| `/context delete <seq>` | Remove the node from the model's view. |
-| `/context replace <start> <end> <user\|assistant> <text>` | Replace the contiguous range `start..end` (inclusive, current surface order) with one message. |
-| `/context history [n]` (alias `log`) | Rewrite audit trail, newest first (default 10, clamped to 1–50). |
-| `/context undo [n]` (alias `restore`) | Restore the n-th most recent rewrite (default 1). |
+| `/shape`, `/shape list`, `ls`, `?` | List the current model-visible nodes (last 10) with `seq`, role badge and a 120-character preview. |
+| `/shape show <seq>` | Print one node's full reply and reasoning chain (and whether it carries tool blocks). |
+| `/shape edit <seq> <text>` | Rewrite the reply text only; reasoning chain and tool calls are kept. |
+| `/shape think <seq> <text>` | Rewrite the reasoning chain only; the reply text is kept. |
+| `/shape clear-think <seq>` | Remove the reasoning chain. |
+| `/shape rewrite <seq> <user\|assistant> <text>` | Rewrite the whole node as plain text (`part=all`). This is the only command that may change a node's role. |
+| `/shape delete <seq>` | Remove the node from the model's view. |
+| `/shape replace <start> <end> <user\|assistant> <text>` | Replace the contiguous range `start..end` (inclusive, current surface order) with one message. |
+| `/shape history [n]` (alias `log`) | Rewrite audit trail, newest first (default 10, clamped to 1–50). |
+| `/shape undo [n]` (alias `restore`) | Restore the n-th most recent rewrite (default 1). |
 
 `<text>` is taken verbatim from the command line, spaces included; `seq` arguments must be integers. Failures are reported as `操作失败：<reason>` and unknown subcommands as `未知子命令：<op>` — command output, error strings and audit lines are in Chinese in 0.2.0.
 
@@ -115,18 +115,18 @@ The AI's buttons are per-message; your own messages have no action row a plugin 
 
 | Tool | Parameters | Notes |
 |---|---|---|
-| `context_list` | `limit?` | List surface nodes in order (or the last N) with `seq`, `role`, `text`. Read-only. |
-| `context_edit` | `seq`, `text`, `part?` (`reply`/`thinking`/`all`), `role?` | `part` defaults to `reply`; `role` is only honored with `part=all`. |
-| `context_delete` | `seq` | Shadow one node with an empty assistant message. |
-| `context_replace` | `start`, `end`, `role`, `text` | Both endpoints inclusive and must be current surface nodes. |
-| `context_history` | `limit?` | Read the rewrite audit trail. Read-only. |
-| `context_restore` | `seq` **or** `index` | Undo the rewrite at `seq`, or the `index`-th most recent rewrite (1 = most recent). |
+| `shape_list` | `limit?` | List surface nodes in order (or the last N) with `seq`, `role`, `text`. Read-only. |
+| `shape_edit` | `seq`, `text`, `part?` (`reply`/`thinking`/`all`), `role?` | `part` defaults to `reply`; `role` is only honored with `part=all`. |
+| `shape_delete` | `seq` | Shadow one node with an empty assistant message. |
+| `shape_replace` | `start`, `end`, `role`, `text` | Both endpoints inclusive and must be current surface nodes. |
+| `shape_history` | `limit?` | Read the rewrite audit trail. Read-only. |
+| `shape_restore` | `seq` **or** `index` | Undo the rewrite at `seq`, or the `index`-th most recent rewrite (1 = most recent). |
 
 All six are refused when `exposeTools: false`; the four mutating tools require a running top-level session. Failures come back as `{ "ok": false, "error": "…" }`, successes as `{ "ok": true, "replacementSeq": …, "shadowedSeq": … }` and similar fields.
 
 ### HTTP API
 
-Routes are registered under `/api/dsh-context-surgery` (prefix registration). `GET` routes are read-only, `POST` routes rewrite history.
+Routes are registered under `/api/dsh-context-shaping` (prefix registration). `GET` routes are read-only, `POST` routes rewrite history.
 
 | Method | Path | Parameters |
 |---|---|---|
@@ -140,20 +140,20 @@ Routes are registered under `/api/dsh-context-surgery` (prefix registration). `G
 | POST | `/restore` | `{ sessionId, seq \| messageId }` |
 
 ```jsonc
-// GET /api/dsh-context-surgery/list?sessionId=abc&limit=2
+// GET /api/dsh-context-shaping/list?sessionId=abc&limit=2
 { "ok": true, "sessionId": "abc", "total": 12, "rows": [
   { "seq": 10, "type": "user/message", "role": "user", "text": "…", "isRewritten": false },
   { "seq": 11, "type": "assistant/message", "role": "assistant", "text": "…", "messageId": "msg_…", "isRewritten": true }
 ] }
 
-// POST /api/dsh-context-surgery/edit
+// POST /api/dsh-context-shaping/edit
 // { "sessionId": "abc", "seq": 11, "part": "thinking", "text": "…" }
 { "ok": true, "replacementSeq": 15, "shadowedSeq": 11, "role": "assistant", "part": "thinking", "text": "…" }
 ```
 
 | Status | Condition |
 |---|---|
-| 403 | Request is not from loopback (`context-surgery API is loopback-only`). |
+| 403 | Request is not from loopback (`context-shaping API is loopback-only`). |
 | 403 | `Host` header is not a loopback hostname on the current port (`invalid host header`) — DNS-rebinding defence, applied to `GET` and `POST` alike. |
 | 403 | `POST` from a cross-origin page (`cross-origin request rejected`). |
 | 403 | `httpEnabled: false`, or `POST` while `httpWrite: false`. |
@@ -165,7 +165,7 @@ Routes are registered under `/api/dsh-context-surgery` (prefix registration). `G
 
 ## Configuration
 
-Set these in the DSH settings page (the plugin registers a settings section, namespace `context-surgery`) or in the profile config layer. Everything has a default, so the plugin works unconfigured; a missing settings service is harmless (defaults stay in effect).
+Set these in the DSH settings page (the plugin registers a settings section, namespace `context-shaping`) or in the profile config layer. Everything has a default, so the plugin works unconfigured; a missing settings service is harmless (defaults stay in effect).
 
 | Key | Default | Effect |
 |---|---|---|
@@ -173,7 +173,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 | `allowToolNodes` | `false` | Allow whole-message rewrite, delete and range replace on messages carrying tool calls (this hides tool records from the model). |
 | `allowRoleChange` | `true` | Allow the command and the GUI to change a message's role (requires `part=all`). |
 | `allowModelRoleChange` | `false` | Allow the **model** to change a message's role (off by default, to prevent forged user turns). |
-| `httpEnabled` | `true` | Serve the `/api/dsh-context-surgery` routes. |
+| `httpEnabled` | `true` | Serve the `/api/dsh-context-shaping` routes. |
 | `httpWrite` | `true` | Allow HTTP rewrite / delete / restore; `false` makes the API read-only. |
 | `auditSize` | `200` | Rewrite records kept per session. |
 | `maxTextLength` | `200000` | Character limit for a single rewrite's text. |
@@ -182,7 +182,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 
 - The model's message list is folded from the session log's **surface** (`Session.deriveMessages()` → request assembly). The log is append-only, but the surface supports **positional replacement**: appending a message event carrying `surfaceOp: { op: "replace", start, end }` plus `sourceEventSeqs` (covering every shadowed node) replaces that contiguous range with the new node. Compaction summaries use the same seam.
 - So a rewrite is always an append: the model's next request reads the edited history, the GUI re-folds the conversation view, and the original text is still in the event log. Nothing in the log is edited in place.
-- `lib/index.js` is the host half: the `/context` command, the six `context_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
+- `lib/index.js` is the host half: the `/shape` command, the six `context_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
 
 ## `part` semantics
 
@@ -223,11 +223,11 @@ There are no dependencies, and the tests need no DSH runtime: `lib/core.js` and 
 
 ## Notes
 
-- **Bundle patch required.** In this DSH version every entry of `dsh.profile.bundles` must be a package declaring `dsh.bundle.patch`; bundles without it are skipped and listed in `skippedBundles`. This package ships `cordis.patch.yml`, which inserts the plugin row (`id: context-surgery`).
-- **Client factory id.** The browser module's id must equal the package name (`dsh-context-surgery`); `lib/client.js` registers itself under that id and returns `{ inject, apply }`.
+- **Bundle patch required.** In this DSH version every entry of `dsh.profile.bundles` must be a package declaring `dsh.bundle.patch`; bundles without it are skipped and listed in `skippedBundles`. This package ships `cordis.patch.yml`, which inserts the plugin row (`id: context-shaping`).
+- **Client factory id.** The browser module's id must equal the package name (`dsh-context-shaping`); `lib/client.js` registers itself under that id and returns `{ inject, apply }`.
 - **No `peerDependencies` on purpose.** DSH validates `peerDependencies` ranges for `@deepseek-ai/dsh*` before importing a plugin, and a too-narrow range would block installation. This package therefore declares none and relies on the host services it injects (`commands`, `tools`, `agents`, and `webServer` when present).
 - **HMR vs restart.** Installing a new bundle can take effect through HMR; **replacing an already-installed package of the same name requires a restart** so the new JS modules are loaded.
-- **Why there is no edit button under *your* messages.** This DSH build exposes four `conversation.chat.*` slots: `node`, `commandview`, `turnTail` and `assistant-actions`. The assistant row passes our slot as `extraActions`, so buttons land right after the copy icon; the user row (`UserMessageNodeView`) renders `MessageIconActions` **without** `extraActions` and renders no slot inside the bubble, so no plugin can add a control there. Per the slot contract, a clickable control belongs in the composer tool row (`conversation.input.left`) and taller content in `conversation.input.dock` — which is where this plugin's *Edit mine* control and its editor live. `/context edit <seq> <text>` remains the exact way to rewrite a user message from the command line.
+- **Why there is no edit button under *your* messages.** This DSH build exposes four `conversation.chat.*` slots: `node`, `commandview`, `turnTail` and `assistant-actions`. The assistant row passes our slot as `extraActions`, so buttons land right after the copy icon; the user row (`UserMessageNodeView`) renders `MessageIconActions` **without** `extraActions` and renders no slot inside the bubble, so no plugin can add a control there. Per the slot contract, a clickable control belongs in the composer tool row (`conversation.input.left`) and taller content in `conversation.input.dock` — which is where this plugin's *Edit mine* control and its editor live. `/shape edit <seq> <text>` remains the exact way to rewrite a user message from the command line.
 - **Headless compositions.** The web routes are injected separately (`ctx.inject(["webServer"], …)`), so the command and the tools still work where no web server exists; only the buttons and the HTTP API are missing.
 - The surface-replacement seam this plugin relies on is DeepSeek Harness's; the commit the implementation was written against is recorded in [NOTICE](NOTICE).
 - History rewriting depends on the host exposing `session.surface.nodes`; if a future DSH version stops doing so, the plugin reports that instead of guessing.

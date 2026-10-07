@@ -1,12 +1,12 @@
-# dsh-context-surgery
+# dsh-context-shaping
 
-对**运行中的 DSH（DeepSeek Harness）会话**的**模型可见历史**做外科手术式改写。
+对**运行中的 DSH（DeepSeek Harness）会话**做交互式**行为塑形**：就地在**模型可见历史**上改写。
 
-回复正文与思考链分开编辑、删除单条消息、整段替换一场对话——模型下一轮请求读到的就是改后的历史，仿佛从未变过。每次改写只是**影蔽**旧节点而不是抹掉它们：原始文本仍留在 append-only 的事件日志里，每次改写都进入审计记录，而且可以还原。
+回复正文与思考链分开编辑、删除单条消息、整段替换一场对话——模型下一轮请求读到的就是塑形后的历史，仿佛从未变过，后续对话便沿着你设定的形状继续。每次改写只是**影蔽**旧节点而不是抹掉它们：原始文本仍留在 append-only 的事件日志里，每次改写都进入审计记录，而且可以还原。
 
 > 社区插件——非 DeepSeek 官方组件，不代表 DeepSeek 背书。它是 `@wasd258/dsh-context-surgery` 0.1.0–0.1.2（© 2026 WASD258-jpg，MIT）的延续，见[许可与署名](#许可与署名)。
 
-版本 0.2.0 · MIT · Node.js >= 22.19.0 · 需要 DSH web profile
+版本 0.4.0 · MIT · Node.js >= 22.19.0 · 需要 DSH web profile
 
 ## 环境要求
 
@@ -24,12 +24,12 @@
 
 ```sh
 cd ~/.dsh/profiles
-npm install --no-save github:zeranhub/dsh-context-surgery
+npm install --no-save github:zeranhub/dsh-context-shaping
 ```
 
-`--no-save` 不能省：profiles 根目录本身没有 `package.json`，不加它 npm 会在这里自己生成一份 `package.json`（把依赖写进去）和 `package-lock.json`；加上 `--no-save` 就只写入 `node_modules/dsh-context-surgery`，目录保持干净。
+`--no-save` 不能省：profiles 根目录本身没有 `package.json`，不加它 npm 会在这里自己生成一份 `package.json`（把依赖写进去）和 `package-lock.json`；加上 `--no-save` 就只写入 `node_modules/dsh-context-shaping`，目录保持干净。
 
-也可以直接把仓库克隆进模块目录：`git clone https://github.com/zeranhub/dsh-context-surgery ~/.dsh/profiles/node_modules/dsh-context-surgery`。
+也可以直接把仓库克隆进模块目录：`git clone https://github.com/zeranhub/dsh-context-shaping ~/.dsh/profiles/node_modules/dsh-context-shaping`。
 
 然后把包名加进 profile 的 `dsh.profile.bundles`（文件：`~/.dsh/profiles/<profile>/package.json`，`<profile>` 桌面应用是 `desktop`，`dsh web` 是 `web`）：
 
@@ -43,7 +43,7 @@ npm install --no-save github:zeranhub/dsh-context-surgery
       "bundles": [
         "@deepseek-ai/dsh-base",
         "@deepseek-ai/dsh-web-app",
-        "dsh-context-surgery"
+        "dsh-context-shaping"
       ]
     }
   }
@@ -58,13 +58,13 @@ Windows 上 `~/.dsh` 即 `%USERPROFILE%\.dsh`（或 `$DSH_HOME`）。
 
 ### 从 0.1.x 升级
 
-0.2.0 把包名从带作用域的 `@wasd258/dsh-context-surgery` 改成不带作用域的 `dsh-context-surgery`，并补上了 0.1.x 缺失的 `dsh.bundle.patch` 声明。迁移步骤：
+路上改过两次名：0.2.0 把带作用域的上游包 `@wasd258/dsh-context-surgery` 改成不带作用域的 `dsh-context-surgery`，并补上 0.1.x 缺失的 `dsh.bundle.patch` 声明；**0.4.0 又把项目改名为 `dsh-context-shaping`**。迁移步骤：
 
-1. 从 profile 清单的 `dsh.profile.bundles` 里删掉 `@wasd258/dsh-context-surgery`，并删除 `~/.dsh/profiles/node_modules/@wasd258/dsh-context-surgery`；
-2. 按上面的方式安装本包，bundle 列表里写 `dsh-context-surgery`；
+1. 从 profile 清单的 `dsh.profile.bundles` 里删掉旧条目，并删除旧的模块目录——`@wasd258/dsh-context-surgery`（0.1.x）和/或 `dsh-context-surgery`（0.2.0/0.3.0）；
+2. 按上面的方式安装本包，bundle 列表里写 `dsh-context-shaping`；
 3. 重启 DSH。
 
-旧条目留着无害但没用——DSH 会跳过它并在启动时打一行提示。内存里的改写记录是按进程保存的；重启后 `/context history` 仍会列出从持久日志里复原的改写，只是没有它们最初的时间戳。
+旧条目留着无害但没用——DSH 会跳过它并在启动时打一行提示。内存里的改写记录是按进程保存的；重启后 `/shape history` 仍会列出从持久日志里复原的改写，只是没有它们最初的时间戳。
 
 ## 使用
 
@@ -92,22 +92,22 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 2. 改完点**保存**；
 3. 该消息在模型可见历史里被改写——**不会发送**、不会开启新回合，下一轮模型请求读到的就是改后的文本。
 
-### `/context` 命令
+### `/shape` 命令
 
-单独输入 `/context`（或 `/context list`）会列出当前模型可见节点——最后 10 条，格式 `[seq] AI|TOOL|YOU <预览>`，改写节点带标记——并附上用法列表。
+单独输入 `/shape`（或 `/shape list`）会列出当前模型可见节点——最后 10 条，格式 `[seq] AI|TOOL|YOU <预览>`，改写节点带标记——并附上用法列表。
 
 | 命令 | 作用 |
 |---|---|
-| `/context`、`/context list`、`ls`、`?` | 列出当前模型可见节点（最后 10 条），含 `seq`、角色标签与 120 字符预览。 |
-| `/context show <seq>` | 查看某节点的完整回复与思考链（以及是否含工具块）。 |
-| `/context edit <seq> <文本>` | 只改回复正文；思考链与工具调用保留。 |
-| `/context think <seq> <文本>` | 只改思考链；回复正文保留。 |
-| `/context clear-think <seq>` | 移除思考链。 |
-| `/context rewrite <seq> <user\|assistant> <文本>` | 整条重写为纯文本（`part=all`）。这是唯一能改变节点角色的命令。 |
-| `/context delete <seq>` | 把该节点从模型视角移除。 |
-| `/context replace <start> <end> <user\|assistant> <文本>` | 把 `start..end`（含端点，按当前 surface 顺序）这段连续节点替换为一条消息。 |
-| `/context history [n]`（别名 `log`） | 改写审计，新的在前（默认 10 条，限制在 1–50）。 |
-| `/context undo [n]`（别名 `restore`） | 还原第 n 近的一次改写（默认最近一次）。 |
+| `/shape`、`/shape list`、`ls`、`?` | 列出当前模型可见节点（最后 10 条），含 `seq`、角色标签与 120 字符预览。 |
+| `/shape show <seq>` | 查看某节点的完整回复与思考链（以及是否含工具块）。 |
+| `/shape edit <seq> <文本>` | 只改回复正文；思考链与工具调用保留。 |
+| `/shape think <seq> <文本>` | 只改思考链；回复正文保留。 |
+| `/shape clear-think <seq>` | 移除思考链。 |
+| `/shape rewrite <seq> <user\|assistant> <文本>` | 整条重写为纯文本（`part=all`）。这是唯一能改变节点角色的命令。 |
+| `/shape delete <seq>` | 把该节点从模型视角移除。 |
+| `/shape replace <start> <end> <user\|assistant> <文本>` | 把 `start..end`（含端点，按当前 surface 顺序）这段连续节点替换为一条消息。 |
+| `/shape history [n]`（别名 `log`） | 改写审计，新的在前（默认 10 条，限制在 1–50）。 |
+| `/shape undo [n]`（别名 `restore`） | 还原第 n 近的一次改写（默认最近一次）。 |
 
 `<文本>` 按命令行原文整段取用（含空格）；`seq` 参数必须是整数。失败返回 `操作失败：<原因>`，未知子命令返回 `未知子命令：<op>`——0.2.0 的命令输出、错误文案与审计行都是中文。
 
@@ -115,18 +115,18 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 
 | 工具 | 参数 | 说明 |
 |---|---|---|
-| `context_list` | `limit?` | 按顺序列出 surface 节点（或最后 N 条），含 `seq`、`role`、`text`。只读。 |
-| `context_edit` | `seq`、`text`、`part?`（`reply`/`thinking`/`all`）、`role?` | `part` 默认 `reply`；`role` 仅在 `part=all` 时生效。 |
-| `context_delete` | `seq` | 以空 assistant 消息影蔽一条节点。 |
-| `context_replace` | `start`、`end`、`role`、`text` | 两端含端点，且都必须是当前 surface 节点。 |
-| `context_history` | `limit?` | 读取改写审计。只读。 |
-| `context_restore` | `seq` **或** `index` | 还原 `seq` 处的那次改写，或第 `index` 近的一次（1 = 最近）。 |
+| `shape_list` | `limit?` | 按顺序列出 surface 节点（或最后 N 条），含 `seq`、`role`、`text`。只读。 |
+| `shape_edit` | `seq`、`text`、`part?`（`reply`/`thinking`/`all`）、`role?` | `part` 默认 `reply`；`role` 仅在 `part=all` 时生效。 |
+| `shape_delete` | `seq` | 以空 assistant 消息影蔽一条节点。 |
+| `shape_replace` | `start`、`end`、`role`、`text` | 两端含端点，且都必须是当前 surface 节点。 |
+| `shape_history` | `limit?` | 读取改写审计。只读。 |
+| `shape_restore` | `seq` **或** `index` | 还原 `seq` 处的那次改写，或第 `index` 近的一次（1 = 最近）。 |
 
 `exposeTools: false` 时六个工具一律被拒；四个改写类工具要求运行中的顶层会话。失败返回 `{ "ok": false, "error": "…" }`，成功返回 `{ "ok": true, "replacementSeq": … , "shadowedSeq": … }` 等字段。
 
 ### HTTP API
 
-路由统一挂在 `/api/dsh-context-surgery` 下（prefix 注册）。`GET` 只读，`POST` 会改写历史。
+路由统一挂在 `/api/dsh-context-shaping` 下（prefix 注册）。`GET` 只读，`POST` 会改写历史。
 
 | 方法 | 路径 | 参数 |
 |---|---|---|
@@ -140,20 +140,20 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 | POST | `/restore` | `{ sessionId, seq \| messageId }` |
 
 ```jsonc
-// GET /api/dsh-context-surgery/list?sessionId=abc&limit=2
+// GET /api/dsh-context-shaping/list?sessionId=abc&limit=2
 { "ok": true, "sessionId": "abc", "total": 12, "rows": [
   { "seq": 10, "type": "user/message", "role": "user", "text": "…", "isRewritten": false },
   { "seq": 11, "type": "assistant/message", "role": "assistant", "text": "…", "messageId": "msg_…", "isRewritten": true }
 ] }
 
-// POST /api/dsh-context-surgery/edit
+// POST /api/dsh-context-shaping/edit
 // { "sessionId": "abc", "seq": 11, "part": "thinking", "text": "…" }
 { "ok": true, "replacementSeq": 15, "shadowedSeq": 11, "role": "assistant", "part": "thinking", "text": "…" }
 ```
 
 | 状态码 | 条件 |
 |---|---|
-| 403 | 来源不是回环地址（`context-surgery API is loopback-only`）。 |
+| 403 | 来源不是回环地址（`context-shaping API is loopback-only`）。 |
 | 403 | `Host` 头不是当前端口上的回环主机名（`invalid host header`）——防 DNS rebinding，GET/POST 一视同仁。 |
 | 403 | 跨源页面发来的 `POST`（`cross-origin request rejected`）。 |
 | 403 | `httpEnabled: false`，或 `httpWrite: false` 时的 `POST`。 |
@@ -165,7 +165,7 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 
 ## 配置
 
-可在 DSH 设置页里改（插件注册了一个设置段，命名空间 `context-surgery`），也可以在 profile 的配置层里给。每一项都有默认值，不配置即可用；设置服务不可用时也无害（保持默认）。
+可在 DSH 设置页里改（插件注册了一个设置段，命名空间 `context-shaping`），也可以在 profile 的配置层里给。每一项都有默认值，不配置即可用；设置服务不可用时也无害（保持默认）。
 
 | 配置项 | 默认值 | 作用 |
 |---|---|---|
@@ -173,7 +173,7 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 | `allowToolNodes` | `false` | 允许对含工具调用的消息做整条重写、删除、整段替换（会把工具记录从模型视角隐藏）。 |
 | `allowRoleChange` | `true` | 允许命令与界面改变消息角色（需 `part=all`）。 |
 | `allowModelRoleChange` | `false` | 允许**模型**改变消息角色（默认关闭，防止伪造用户发言）。 |
-| `httpEnabled` | `true` | 启用 `/api/dsh-context-surgery` 路由。 |
+| `httpEnabled` | `true` | 启用 `/api/dsh-context-shaping` 路由。 |
 | `httpWrite` | `true` | 允许 HTTP 改写 / 删除 / 还原；`false` 时接口只读。 |
 | `auditSize` | `200` | 每个会话保留的改写记录条数。 |
 | `maxTextLength` | `200000` | 单次改写文本的字符上限。 |
@@ -182,7 +182,7 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 
 - 模型的消息列表由会话日志的 **surface** 折叠而来（`Session.deriveMessages()` → 请求组装）。日志是 append-only，但 surface 支持**位置替换**：追加一个带 `surfaceOp: { op: "replace", start, end }` 与 `sourceEventSeqs`（覆盖全部被影蔽节点）的消息事件，就能把这段连续节点替换成新节点——compaction 压缩总结用的正是同一条缝。
 - 所以每次改写都是一次追加：模型下一轮请求读到改后的历史，GUI 重新折叠对话视图，而原始文本仍完整留在事件日志里。日志本身从不被就地修改。
-- `lib/index.js` 是 host 端：`/context` 命令、六个 `context_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：注册三处插槽——每条消息的操作行（`conversation.chat.assistant-actions`）、「改我的消息」按钮（`conversation.input.left`）与它的编辑器（`conversation.input.dock`）。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
+- `lib/index.js` 是 host 端：`/shape` 命令、六个 `context_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：注册三处插槽——每条消息的操作行（`conversation.chat.assistant-actions`）、「改我的消息」按钮（`conversation.input.left`）与它的编辑器（`conversation.input.dock`）。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
 
 ## `part` 语义
 
@@ -223,11 +223,11 @@ npm test        # node --test
 
 ## 说明
 
-- **必须自带 bundle patch。** 在这个 DSH 版本里，`dsh.profile.bundles` 的每一项都必须是声明了 `dsh.bundle.patch` 的包；没有它的 bundle 会被跳过并出现在 `skippedBundles` 里。本包带 `cordis.patch.yml`，负责插入插件行（`id: context-surgery`）。
-- **客户端工厂 id。** 浏览器端模块的 id 必须等于包名（`dsh-context-surgery`）；`lib/client.js` 以该 id 注册自身并 `return { inject, apply }`。
+- **必须自带 bundle patch。** 在这个 DSH 版本里，`dsh.profile.bundles` 的每一项都必须是声明了 `dsh.bundle.patch` 的包；没有它的 bundle 会被跳过并出现在 `skippedBundles` 里。本包带 `cordis.patch.yml`，负责插入插件行（`id: context-shaping`）。
+- **客户端工厂 id。** 浏览器端模块的 id 必须等于包名（`dsh-context-shaping`）；`lib/client.js` 以该 id 注册自身并 `return { inject, apply }`。
 - **故意不声明 `peerDependencies`。** DSH 在导入插件前会校验 `peerDependencies` 里 `@deepseek-ai/dsh*` 的版本范围，范围写窄了会把安装卡住。因此本包不声明，只依赖注入进来的宿主服务（`commands`、`tools`、`agents`，以及存在时的 `webServer`）。
 - **HMR 与重启。** 安装新 bundle 可能经 HMR 生效；**替换已安装的同名包则需要重启**，新的 JS 模块才会被加载。
-- **为什么你自己的消息下面没有编辑按钮。** 这个 DSH 构建只暴露四个 `conversation.chat.*` 插槽：`node`、`commandview`、`turnTail`、`assistant-actions`。AI 那一行会把我们的插槽当作 `extraActions` 渲染，所以按钮正好落在复制图标右边；而用户消息那一行（`UserMessageNodeView`）调用 `MessageIconActions` 时**没有**传 `extraActions`，气泡内也不渲染任何插槽，插件无法在那里加控件。按插槽契约，可点击控件属于输入卡片工具行（`conversation.input.left`），更高的内容属于 `conversation.input.dock`——本插件的「改我的消息」按钮与编辑器就在这两处。要在命令行改写用户消息，仍可用 `/context edit <seq> <文本>`。
+- **为什么你自己的消息下面没有编辑按钮。** 这个 DSH 构建只暴露四个 `conversation.chat.*` 插槽：`node`、`commandview`、`turnTail`、`assistant-actions`。AI 那一行会把我们的插槽当作 `extraActions` 渲染，所以按钮正好落在复制图标右边；而用户消息那一行（`UserMessageNodeView`）调用 `MessageIconActions` 时**没有**传 `extraActions`，气泡内也不渲染任何插槽，插件无法在那里加控件。按插槽契约，可点击控件属于输入卡片工具行（`conversation.input.left`），更高的内容属于 `conversation.input.dock`——本插件的「改我的消息」按钮与编辑器就在这两处。要在命令行改写用户消息，仍可用 `/shape edit <seq> <文本>`。
 - **headless 组合。** Web 路由是单独注入的（`ctx.inject(["webServer"], …)`），因此没有 web server 时命令与工具照常工作，只是没有按钮与 HTTP API。
 - 本插件依赖的 surface 替换缝来自 DeepSeek Harness；实现所参照的提交记录在 [NOTICE](NOTICE) 里。
 - 历史改写依赖宿主暴露 `session.surface.nodes`；若将来的 DSH 版本不再暴露，插件会直接报错，而不是靠猜。

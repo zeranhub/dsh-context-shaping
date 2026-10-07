@@ -1,7 +1,7 @@
 {
-  "name": "dsh-context-surgery",
-  "version": "0.3.0",
-  "description": "Surgical rewriting of the model-visible conversation history of a DSH session (surface replacement), with an audit trail and undo. 上下文手术刀：强制改写会话的模型可见历史，回复与思考链分开编辑，并带改写审计与还原。",
+  "name": "dsh-context-shaping",
+  "version": "0.4.0",
+  "description": "Interactive behavioral shaping for a DeepSeek Harness (DSH) session: rewrite the model-visible conversation history in place (reply text and reasoning chain separately), with an audit trail and undo. 交互式行为塑形：就地改写会话的模型可见历史，回复与思考链分开编辑，并带改写审计与还原。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
@@ -54,17 +54,17 @@
     "deepseek",
     "cordis",
     "context",
-    "context-surgery",
+    "context-shaping",
     "history",
     "surface"
   ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/zeranhub/dsh-context-surgery.git"
+    "url": "git+https://github.com/zeranhub/dsh-context-shaping.git"
   },
-  "homepage": "https://github.com/zeranhub/dsh-context-surgery#readme",
+  "homepage": "https://github.com/zeranhub/dsh-context-shaping#readme",
   "bugs": {
-    "url": "https://github.com/zeranhub/dsh-context-surgery/issues"
+    "url": "https://github.com/zeranhub/dsh-context-shaping/issues"
   }
 }

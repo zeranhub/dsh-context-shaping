@@ -22,6 +22,10 @@ This repository continues the community plugin @wasd258/dsh-context-surgery
 (versions 0.1.0-0.1.2, published on npm by WASD258-jpg), whose upstream
 repository is no longer available. It is not an original work.
 
+This project was renamed from dsh-context-surgery to dsh-context-shaping in
+0.4.0. The upstream package name above is historical and unchanged, and the
+upstream notice text above is kept verbatim.
+
   Original work:      Copyright (c) 2026 WASD258-jpg - MIT
   Continuation:       Copyright (c) 2026 zeranhub - MIT
 

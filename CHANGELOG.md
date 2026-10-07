@@ -4,11 +4,32 @@ All notable changes to this project are documented in this file. The format foll
 
 This repository continues the community plugin `@wasd258/dsh-context-surgery` (0.1.0–0.1.2). Those releases are listed at the end for context; they are not maintained here.
 
+> **Naming note.** 0.4.0 renamed the project from `dsh-context-surgery` to `dsh-context-shaping`. Entries for earlier releases have been updated to the current identifiers so copied commands still work; the upstream package this project continues is still published as `@wasd258/dsh-context-surgery`.
+
+## [0.4.0] - 2026-10-07
+
+### Changed
+
+- **Renamed: `dsh-context-surgery` → `dsh-context-shaping`.** The point of the plugin is interactive behavioral shaping, not error correction, and the name now says so. This is a breaking rename — every identifier moved:
+
+  | Before | After |
+  |---|---|
+  | npm package `dsh-context-surgery` | `dsh-context-shaping` |
+  | bundle row `id: context-surgery` | `id: context-shaping` |
+  | command `/context …` | `/shape …` |
+  | tools `context_list`, `context_edit`, `context_delete`, `context_replace`, `context_history`, `context_restore` | `shape_list`, `shape_edit`, `shape_delete`, `shape_replace`, `shape_history`, `shape_restore` |
+  | HTTP API `/api/dsh-context-surgery/…` | `/api/dsh-context-shaping/…` |
+  | settings namespace `context-surgery` | `context-shaping` |
+  | client module id and slot ids `context-surgery-*` | `context-shaping-*` |
+
+  Attribution is unchanged: the upstream work this project continues is still `@wasd258/dsh-context-surgery` (0.1.0–0.1.2, © 2026 WASD258-jpg).
+- Tool descriptions and both READMEs now frame the feature as interactive behavioral shaping instead of "surgery".
+
 ## [0.3.0] - 2026-10-07
 
 ### Added
 
-- **Edit your own most recent message from the composer.** A small ✏️ *Edit mine* control sits in the composer's tool row (`conversation.input.left`) and opens a full-width editor above the card (`conversation.input.dock`); saving rewrites that user message's text in the model-visible history — nothing is sent, no new turn starts. Backed by a new read-only route `GET /api/dsh-context-surgery/last-user?sessionId=<id>` and `lastUserNode()` in `lib/ops.js`, which skips injected `user/message` context (`source.kind !== "user"`) so the control targets what you actually typed.
+- **Edit your own most recent message from the composer.** A small ✏️ *Edit mine* control sits in the composer's tool row (`conversation.input.left`) and opens a full-width editor above the card (`conversation.input.dock`); saving rewrites that user message's text in the model-visible history — nothing is sent, no new turn starts. Backed by a new read-only route `GET /api/dsh-context-shaping/last-user?sessionId=<id>` and `lastUserNode()` in `lib/ops.js`, which skips injected `user/message` context (`source.kind !== "user"`) so the control targets what you actually typed.
 
 ### Notes
 
@@ -19,16 +40,16 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 ### Added
 
-- **Rewrite audit trail.** `/context history [n]` (alias `log`), the `context_history` tool, and `GET /api/dsh-context-surgery/history`. Entries are derived from the durable event log, so the trail survives a DSH restart; records recovered from the log that way are marked with the `recovered` source.
-- **Restore / undo.** `/context undo [n]` (alias `restore`), the `context_restore` tool, `POST /api/dsh-context-surgery/restore`, and the ↩️ button on rewrite nodes. Exact for single-node rewrites (`edit`, `delete`); a range replacement can only be restored merged into one message and reports `lossy: true`.
-- **Configuration.** A schemastery config object and a settings section (namespace `context-surgery`) with eight keys, all defaulted: `exposeTools`, `allowToolNodes`, `allowRoleChange`, `allowModelRoleChange`, `httpEnabled`, `httpWrite`, `auditSize`, `maxTextLength`. The HTTP API can be made read-only or disabled, and the model's ability to change a message's role is off by default.
+- **Rewrite audit trail.** `/shape history [n]` (alias `log`), the `shape_history` tool, and `GET /api/dsh-context-shaping/history`. Entries are derived from the durable event log, so the trail survives a DSH restart; records recovered from the log that way are marked with the `recovered` source.
+- **Restore / undo.** `/shape undo [n]` (alias `restore`), the `shape_restore` tool, `POST /api/dsh-context-shaping/restore`, and the ↩️ button on rewrite nodes. Exact for single-node rewrites (`edit`, `delete`); a range replacement can only be restored merged into one message and reports `lossy: true`.
+- **Configuration.** A schemastery config object and a settings section (namespace `context-shaping`) with eight keys, all defaulted: `exposeTools`, `allowToolNodes`, `allowRoleChange`, `allowModelRoleChange`, `httpEnabled`, `httpWrite`, `auditSize`, `maxTextLength`. The HTTP API can be made read-only or disabled, and the model's ability to change a message's role is off by default.
 - **Top-level session guard.** `requireRootAgent` — mutating operations (command subcommands, the four write tools, HTTP writes) require a running top-level session; subagents are refused.
-- `/context show <seq>` for inspecting a single node's reply and reasoning chain.
+- `/shape show <seq>` for inspecting a single node's reply and reasoning chain.
 - `part`-level semantics are spelled out in the tool descriptions, including that a role change is only possible with `part=all`.
 
 ### Fixed
 
-- **Command arguments were sliced at the wrong offset.** Text was extracted with `indexOf` on the token value, so a rewrite whose text repeated an earlier token was truncated at the first match (for example `/context edit 5 5` produced an empty reply). Text is now taken by token offset (`textAfter`).
+- **Command arguments were sliced at the wrong offset.** Text was extracted with `indexOf` on the token value, so a rewrite whose text repeated an earlier token was truncated at the first match (for example `/shape edit 5 5` produced an empty reply). Text is now taken by token offset (`textAfter`).
 - **`part=reply` duplicated the new text into every text block.** A message with several text blocks received the new text in each of them; it now yields exactly one text block, placed where the first text block was.
 - **Destructive rewrites could orphan tool results.** Deleting a message or rewriting it whole (`part=all`) could remove a node that carried tool calls while its `tool/result` stayed in the model-visible context, leaving a tool result without its call. These operations are now refused for such nodes unless `allowToolNodes` is enabled.
 
@@ -38,7 +59,7 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 ### Changed
 
-- Package metadata: `dsh.bundle.patch` (`./cordis.patch.yml`) is declared so DSH actually loads the bundle (`dsh.profile.bundles` entries without a patch are skipped and reported in `skippedBundles`); `./cordis.patch.yml` and `./locale/*.json` are exported and shipped; the client factory id equals the package name (`dsh-context-surgery`); localized plugin titles ship in `locale/en.json` and `locale/zh.json`.
+- Package metadata: `dsh.bundle.patch` (`./cordis.patch.yml`) is declared so DSH actually loads the bundle (`dsh.profile.bundles` entries without a patch are skipped and reported in `skippedBundles`); `./cordis.patch.yml` and `./locale/*.json` are exported and shipped; the client factory id equals the package name (`dsh-context-shaping`); localized plugin titles ship in `locale/en.json` and `locale/zh.json`.
 - `webServer` is injected on demand instead of being a hard dependency, so the command and tools keep working in compositions without a web server.
 
 ### Notes
@@ -48,4 +69,4 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 ## Prior releases (upstream, not maintained here)
 
-- **0.1.0 – 0.1.2** (2026-08-15) — `@wasd258/dsh-context-surgery` by WASD258-jpg, MIT: the original implementation with the `/context` command (`edit`, `think`, `clear-think`, `rewrite`, `delete`, `replace`), the `context_list` / `context_edit` / `context_delete` / `context_replace` tools, the per-message buttons, and the loopback HTTP API. Its GitHub repository is no longer available (404). 0.2.0 continues from that code; the original attribution and MIT notice are preserved in [NOTICE](NOTICE).
+- **0.1.0 – 0.1.2** (2026-08-15) — `@wasd258/dsh-context-surgery` by WASD258-jpg, MIT: the original implementation with the `/shape` command (`edit`, `think`, `clear-think`, `rewrite`, `delete`, `replace`), the `shape_list` / `shape_edit` / `shape_delete` / `shape_replace` tools, the per-message buttons, and the loopback HTTP API. Its GitHub repository is no longer available (404). 0.2.0 continues from that code; the original attribution and MIT notice are preserved in [NOTICE](NOTICE).

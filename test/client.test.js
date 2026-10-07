@@ -61,9 +61,9 @@ test("客户端工厂返回 { inject, apply } 并注册到三个宿主插槽", (
 	assert.deepEqual(
 		registered.map((item) => [item.meta.name, item.meta.id]),
 		[
-			["conversation.chat.assistant-actions", "context-surgery-message"],
-			["conversation.input.left", "context-surgery-edit-last"],
-			["conversation.input.dock", "context-surgery-editor"]
+			["conversation.chat.assistant-actions", "context-shaping-message"],
+			["conversation.input.left", "context-shaping-edit-last"],
+			["conversation.input.dock", "context-shaping-editor"]
 		]
 	);
 	for (const item of registered) {
@@ -84,7 +84,7 @@ test("输入区按钮通过注册项的 inject 拿 sessionId", () => {
 			}
 		}
 	});
-	const button = registered.find((item) => item.meta.id === "context-surgery-edit-last");
+	const button = registered.find((item) => item.meta.id === "context-shaping-edit-last");
 	assert.equal(typeof button.meta.inject, "function");
 	assert.deepEqual(button.meta.inject("session-abc"), { sessionId: "session-abc" });
 });
@@ -97,7 +97,7 @@ test("缺少 slots 服务时不抛错（避免整块插槽被拖垮）", () => {
 
 test("客户端只调用本插件自己的接口前缀", () => {
 	const paths = [...clientSource.matchAll(/["'`](\/api\/[^"'`?]*)/g)].map((match) => match[1]);
-	const prefix = "/api/dsh-context-surgery";
+	const prefix = "/api/dsh-context-shaping";
 	assert.ok(paths.length > 0, "应当存在 API 调用");
 	for (const path of paths) {
 		assert.ok(path === prefix || path.startsWith(prefix + "/"), `越界的接口前缀：${path}`);
