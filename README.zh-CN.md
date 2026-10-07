@@ -18,7 +18,7 @@
 
 ### Plugin Manager（推荐）
 
-在 DSH 里打开插件页（Plugin Manager）安装本 bundle——`plugin_manager` 的 `install_bundle` 会替你完成包安装与 bundle 选择。卡片上显示本包自带的本地化标题与描述：**Context Surgery**（英文，`locale/en.json`）/ **上下文手术刀**（中文，`locale/zh.json`）。
+在 DSH 里打开插件页（Plugin Manager）安装本 bundle——`plugin_manager` 的 `install_bundle` 会替你完成包安装与 bundle 选择。卡片上显示本包自带的本地化标题与描述：**Context Shaping**（英文，`locale/en.json`）/ **上下文塑形**（中文，`locale/zh.json`）。
 
 ### 手动安装
 
@@ -169,7 +169,7 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 
 | 配置项 | 默认值 | 作用 |
 |---|---|---|
-| `exposeTools` | `true` | 把 `context_*` 工具交给模型；`false` 时模型调用一律被拒。 |
+| `exposeTools` | `true` | 把 `shape_*` 工具交给模型；`false` 时模型调用一律被拒。 |
 | `allowToolNodes` | `false` | 允许对含工具调用的消息做整条重写、删除、整段替换（会把工具记录从模型视角隐藏）。 |
 | `allowRoleChange` | `true` | 允许命令与界面改变消息角色（需 `part=all`）。 |
 | `allowModelRoleChange` | `false` | 允许**模型**改变消息角色（默认关闭，防止伪造用户发言）。 |
@@ -182,7 +182,7 @@ AI 消息的按钮是「每条消息一个」；而你自己的消息，在这�
 
 - 模型的消息列表由会话日志的 **surface** 折叠而来（`Session.deriveMessages()` → 请求组装）。日志是 append-only，但 surface 支持**位置替换**：追加一个带 `surfaceOp: { op: "replace", start, end }` 与 `sourceEventSeqs`（覆盖全部被影蔽节点）的消息事件，就能把这段连续节点替换成新节点——compaction 压缩总结用的正是同一条缝。
 - 所以每次改写都是一次追加：模型下一轮请求读到改后的历史，GUI 重新折叠对话视图，而原始文本仍完整留在事件日志里。日志本身从不被就地修改。
-- `lib/index.js` 是 host 端：`/shape` 命令、六个 `context_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：注册三处插槽——每条消息的操作行（`conversation.chat.assistant-actions`）、「改我的消息」按钮（`conversation.input.left`）与它的编辑器（`conversation.input.dock`）。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
+- `lib/index.js` 是 host 端：`/shape` 命令、六个 `shape_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：注册三处插槽——每条消息的操作行（`conversation.chat.assistant-actions`）、「改我的消息」按钮（`conversation.input.left`）与它的编辑器（`conversation.input.dock`）。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
 
 ## `part` 语义
 

@@ -1,5 +1,5 @@
 # dsh-context-shaping over the shipped Web composition: it inserts its own Host
-# row (the /shape command, the context_* tools, and the message API the
+# row (the /shape command, the shape_* tools, and the message API the
 # per-message buttons call). The package's `dsh.client` section carries the
 # browser half, registered by the id that equals the package name.
 

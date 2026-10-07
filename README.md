@@ -18,7 +18,7 @@ Version 0.4.0 · MIT · Node.js >= 22.19.0 · requires a DSH web profile
 
 ### Plugin Manager (recommended)
 
-Open the plugins page in DSH (Plugin Manager) and install this bundle — `plugin_manager`'s `install_bundle` installs the package and selects the bundle for you. The card shows the localized title and description from this package: **Context Surgery** (English, `locale/en.json`) / **上下文手术刀** (Chinese, `locale/zh.json`).
+Open the plugins page in DSH (Plugin Manager) and install this bundle — `plugin_manager`'s `install_bundle` installs the package and selects the bundle for you. The card shows the localized title and description from this package: **Context Shaping** (English, `locale/en.json`) / **上下文塑形** (Chinese, `locale/zh.json`).
 
 ### Manual
 
@@ -169,7 +169,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 
 | Key | Default | Effect |
 |---|---|---|
-| `exposeTools` | `true` | Register the `context_*` tools for the model. When `false`, model calls are refused. |
+| `exposeTools` | `true` | Register the `shape_*` tools for the model. When `false`, model calls are refused. |
 | `allowToolNodes` | `false` | Allow whole-message rewrite, delete and range replace on messages carrying tool calls (this hides tool records from the model). |
 | `allowRoleChange` | `true` | Allow the command and the GUI to change a message's role (requires `part=all`). |
 | `allowModelRoleChange` | `false` | Allow the **model** to change a message's role (off by default, to prevent forged user turns). |
@@ -182,7 +182,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 
 - The model's message list is folded from the session log's **surface** (`Session.deriveMessages()` → request assembly). The log is append-only, but the surface supports **positional replacement**: appending a message event carrying `surfaceOp: { op: "replace", start, end }` plus `sourceEventSeqs` (covering every shadowed node) replaces that contiguous range with the new node. Compaction summaries use the same seam.
 - So a rewrite is always an append: the model's next request reads the edited history, the GUI re-folds the conversation view, and the original text is still in the event log. Nothing in the log is edited in place.
-- `lib/index.js` is the host half: the `/shape` command, the six `context_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
+- `lib/index.js` is the host half: the `/shape` command, the six `shape_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
 
 ## `part` semantics
 
