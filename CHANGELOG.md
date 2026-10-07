@@ -4,6 +4,17 @@ All notable changes to this project are documented in this file. The format foll
 
 This repository continues the community plugin `@wasd258/dsh-context-surgery` (0.1.0–0.1.2). Those releases are listed at the end for context; they are not maintained here.
 
+## [0.3.0] - 2026-10-07
+
+### Added
+
+- **Edit your own most recent message from the composer.** A small ✏️ *Edit mine* control sits in the composer's tool row (`conversation.input.left`) and opens a full-width editor above the card (`conversation.input.dock`); saving rewrites that user message's text in the model-visible history — nothing is sent, no new turn starts. Backed by a new read-only route `GET /api/dsh-context-surgery/last-user?sessionId=<id>` and `lastUserNode()` in `lib/ops.js`, which skips injected `user/message` context (`source.kind !== "user"`) so the control targets what you actually typed.
+
+### Notes
+
+- On why this is a composer control and not a button under the user bubble: this DSH build exposes exactly four `conversation.chat.*` slots (`node`, `commandview`, `turnTail`, `assistant-actions`). The user row (`UserMessageNodeView`) renders `MessageIconActions` without passing `extraActions`, so no plugin can add a control inside it. The composer tool row is the supported seat for a clickable control, and `conversation.input.dock` for the editor body — that split is what the slot contract prescribes ("anything the user must click belongs in the tool row").
+- For the same reason the assistant-side buttons already render immediately to the right of the copy icon: the host composes the row as `[clock] copy, extraActions, branch` and passes our slot as `extraActions`.
+
 ## [0.2.0] - 2026-10-07
 
 ### Added

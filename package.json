@@ -1,6 +1,6 @@
 {
   "name": "dsh-context-surgery",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Surgical rewriting of the model-visible conversation history of a DSH session (surface replacement), with an audit trail and undo. 上下文手术刀：强制改写会话的模型可见历史，回复与思考链分开编辑，并带改写审计与还原。",
   "type": "module",
   "main": "lib/index.js",

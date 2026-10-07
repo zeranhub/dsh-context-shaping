@@ -30,7 +30,7 @@ test("客户端工厂的 id 必须等于包名（DSH 的加载约定）", () => 
 	assert.equal(typeof entry.factory, "function");
 });
 
-test("客户端工厂返回 { inject, apply } 并注册到会话消息插槽", () => {
+test("客户端工厂返回 { inject, apply } 并注册到三个宿主插槽", () => {
 	const entry = loadClientEntry();
 	const mod = entry.factory((name) => {
 		if (name === "react") return fakeReact;
@@ -40,10 +40,10 @@ test("客户端工厂返回 { inject, apply } 并注册到会话消息插槽", (
 	assert.equal(typeof mod.apply, "function");
 
 	const registered = [];
-	let injectedOwner;
+	const owners = [];
 	const slots = {
 		inject(owner, callback) {
-			injectedOwner = owner;
+			owners.push(owner);
 			callback();
 		},
 		register(meta, component) {
@@ -52,11 +52,41 @@ test("客户端工厂返回 { inject, apply } 并注册到会话消息插槽", (
 		}
 	};
 	mod.apply({ slots });
-	assert.equal(injectedOwner, "conversation.chat.assistant-actions");
-	assert.equal(registered.length, 1);
-	assert.equal(registered[0].meta.name, "conversation.chat.assistant-actions");
-	assert.equal(registered[0].meta.id, "context-surgery-message");
-	assert.equal(typeof registered[0].component, "function");
+
+	assert.deepEqual(owners, [
+		"conversation.chat.assistant-actions",
+		"conversation.input.left",
+		"conversation.input.dock"
+	]);
+	assert.deepEqual(
+		registered.map((item) => [item.meta.name, item.meta.id]),
+		[
+			["conversation.chat.assistant-actions", "context-surgery-message"],
+			["conversation.input.left", "context-surgery-edit-last"],
+			["conversation.input.dock", "context-surgery-editor"]
+		]
+	);
+	for (const item of registered) {
+		assert.equal(typeof item.component, "function");
+	}
+});
+
+test("输入区按钮通过注册项的 inject 拿 sessionId", () => {
+	const entry = loadClientEntry();
+	const mod = entry.factory(() => fakeReact);
+	const registered = [];
+	mod.apply({
+		slots: {
+			inject: (_owner, callback) => callback(),
+			register: (meta, component) => {
+				registered.push({ meta, component });
+				return () => {};
+			}
+		}
+	});
+	const button = registered.find((item) => item.meta.id === "context-surgery-edit-last");
+	assert.equal(typeof button.meta.inject, "function");
+	assert.deepEqual(button.meta.inject("session-abc"), { sessionId: "session-abc" });
 });
 
 test("缺少 slots 服务时不抛错（避免整块插槽被拖垮）", () => {

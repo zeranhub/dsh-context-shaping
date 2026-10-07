@@ -5,6 +5,7 @@ import {
 	describeNode,
 	editNode,
 	eventAt,
+	lastUserNode,
 	replaceRange,
 	restoreNode,
 	rewriteRecords,
@@ -209,6 +210,47 @@ test("审计：rewriteRecords 从日志复原改写历史", () => {
 	assert.equal(records.length, 3);
 	assert.equal(records[2].replacementSeq, restored.replacementSeq);
 	assert.deepEqual(records[2].shadowedSeqs, [second.replacementSeq]);
+});
+
+test("lastUserNode 找最近一条用户自己发的消息", () => {
+	const session = new FakeSession();
+	session.addUser("第一句");
+	const assistant = session.addAssistant("回答");
+	session.addUser("第二句");
+	assert.deepEqual(
+		(() => {
+			const node = lastUserNode(session);
+			return { seq: node.seq, text: node.text, isRewritten: node.isRewritten, sourceKind: node.sourceKind };
+		})(),
+		{ seq: 2, text: "第二句", isRewritten: false, sourceKind: "user" }
+	);
+
+	// 改写之后仍然指向同一个节点（现在是改写节点）
+	const edited = editNode({ session, deps, seq: 2, text: "第二句（改）", part: "reply" });
+	const node = lastUserNode(session);
+	assert.equal(node.seq, edited.replacementSeq);
+	assert.equal(node.text, "第二句（改）");
+	assert.equal(node.isRewritten, true);
+	assert.ok(assistant.seq < node.seq);
+});
+
+test("lastUserNode 跳过注入的上下文，除非显式要求", () => {
+	const session = new FakeSession();
+	session.addUser("我打的字");
+	// 注入的上下文同样是 user/message，但 source.kind 不是 user
+	session.append("user/message", {
+		id: "ctx1",
+		content: [{ type: "text", text: "<system-reminder>..." }],
+		source: { kind: "instructions" }
+	}, { surfaceOp: "append" });
+	assert.equal(lastUserNode(session).text, "我打的字");
+	assert.equal(lastUserNode(session, { includeInjected: true }).text, "<system-reminder>...");
+});
+
+test("lastUserNode 在没有用户消息时返回 undefined", () => {
+	const session = new FakeSession();
+	session.addAssistant("只有 AI 的话");
+	assert.equal(lastUserNode(session), undefined);
 });
 
 test("undo 候选：最近一次改写优先，且不会把还原节点当成新改写", () => {

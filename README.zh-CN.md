@@ -82,6 +82,16 @@ Windows 上 `~/.dsh` 即 `%USERPROFILE%\.dsh`（或 `$DSH_HOME`）。
 
 按钮文案与提示跟随浏览器语言（`zh*` → 中文，否则英文）。
 
+宿主把这一行拼成 `[时钟] 复制 · extraActions · 分支`，我们的插槽内容正是其中的 `extraActions`——所以这些按钮就出现在**复制图标正右边**。
+
+### 编辑我自己发的消息（Web GUI）
+
+AI 消息的按钮是「每条消息一个」；而你自己的消息，在这个 DSH 构建里没有任何可供插件扩展的动作行（见[说明](#说明)）。因此插件改为在输入卡片的工具行（`conversation.input.left`）放一个小按钮 ✏️ **改我的消息**，点开后在卡片上方（`conversation.input.dock`）展开整行编辑器：
+
+1. 点「改我的消息」——载入你最近一条自己发的消息（注入的 `user/message` 上下文会被跳过）；
+2. 改完点**保存**；
+3. 该消息在模型可见历史里被改写——**不会发送**、不会开启新回合，下一轮模型请求读到的就是改后的文本。
+
 ### `/context` 命令
 
 单独输入 `/context`（或 `/context list`）会列出当前模型可见节点——最后 10 条，格式 `[seq] AI|TOOL|YOU <预览>`，改写节点带标记——并附上用法列表。
@@ -121,6 +131,7 @@ Windows 上 `~/.dsh` 即 `%USERPROFILE%\.dsh`（或 `$DSH_HOME`）。
 | 方法 | 路径 | 参数 |
 |---|---|---|
 | GET | `/list`（或 `/`） | `?sessionId=<id>&limit=<n>`——`limit` = 最后 N 条；省略或 0 = 全部。 |
+| GET | `/last-user` | `?sessionId=<id>`——你最近一条自己发的消息，供输入框的「改我的消息」使用：`{ ok, found, seq?, messageId?, text?, isRewritten?, sourceKind? }`。会跳过注入的 `user/message` 上下文。只读，不做顶层会话校验。 |
 | GET | `/message` | `?sessionId=<id>&messageId=<seq 或消息 id>`——单条节点，拆成 reply / reasoning。 |
 | GET | `/history` | `?sessionId=<id>`——审计：进程内 journal + 从日志复原的记录。 |
 | POST | `/edit` | `{ sessionId, seq \| messageId, part?, role?, text }` |
@@ -171,7 +182,7 @@ Windows 上 `~/.dsh` 即 `%USERPROFILE%\.dsh`（或 `$DSH_HOME`）。
 
 - 模型的消息列表由会话日志的 **surface** 折叠而来（`Session.deriveMessages()` → 请求组装）。日志是 append-only，但 surface 支持**位置替换**：追加一个带 `surfaceOp: { op: "replace", start, end }` 与 `sourceEventSeqs`（覆盖全部被影蔽节点）的消息事件，就能把这段连续节点替换成新节点——compaction 压缩总结用的正是同一条缝。
 - 所以每次改写都是一次追加：模型下一轮请求读到改后的历史，GUI 重新折叠对话视图，而原始文本仍完整留在事件日志里。日志本身从不被就地修改。
-- `lib/index.js` 是 host 端：`/context` 命令、六个 `context_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：通过 `conversation.chat.assistant-actions` 插槽注入每条消息的操作行。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
+- `lib/index.js` 是 host 端：`/context` 命令、六个 `context_*` 工具、HTTP 路由与设置段。`lib/client.js` 是浏览器端：注册三处插槽——每条消息的操作行（`conversation.chat.assistant-actions`）、「改我的消息」按钮（`conversation.input.left`）与它的编辑器（`conversation.input.dock`）。`lib/ops.js` 针对会话对象实现各个操作，`lib/core.js` 放纯函数（预览、块变换、命令解析）——两者都不 import 任何 DSH 包，因此 `node --test` 无需 DSH 运行时即可覆盖。
 
 ## `part` 语义
 
@@ -216,6 +227,7 @@ npm test        # node --test
 - **客户端工厂 id。** 浏览器端模块的 id 必须等于包名（`dsh-context-surgery`）；`lib/client.js` 以该 id 注册自身并 `return { inject, apply }`。
 - **故意不声明 `peerDependencies`。** DSH 在导入插件前会校验 `peerDependencies` 里 `@deepseek-ai/dsh*` 的版本范围，范围写窄了会把安装卡住。因此本包不声明，只依赖注入进来的宿主服务（`commands`、`tools`、`agents`，以及存在时的 `webServer`）。
 - **HMR 与重启。** 安装新 bundle 可能经 HMR 生效；**替换已安装的同名包则需要重启**，新的 JS 模块才会被加载。
+- **为什么你自己的消息下面没有编辑按钮。** 这个 DSH 构建只暴露四个 `conversation.chat.*` 插槽：`node`、`commandview`、`turnTail`、`assistant-actions`。AI 那一行会把我们的插槽当作 `extraActions` 渲染，所以按钮正好落在复制图标右边；而用户消息那一行（`UserMessageNodeView`）调用 `MessageIconActions` 时**没有**传 `extraActions`，气泡内也不渲染任何插槽，插件无法在那里加控件。按插槽契约，可点击控件属于输入卡片工具行（`conversation.input.left`），更高的内容属于 `conversation.input.dock`——本插件的「改我的消息」按钮与编辑器就在这两处。要在命令行改写用户消息，仍可用 `/context edit <seq> <文本>`。
 - **headless 组合。** Web 路由是单独注入的（`ctx.inject(["webServer"], …)`），因此没有 web server 时命令与工具照常工作，只是没有按钮与 HTTP API。
 - 本插件依赖的 surface 替换缝来自 DeepSeek Harness；实现所参照的提交记录在 [NOTICE](NOTICE) 里。
 - 历史改写依赖宿主暴露 `session.surface.nodes`；若将来的 DSH 版本不再暴露，插件会直接报错，而不是靠猜。

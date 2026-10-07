@@ -82,6 +82,16 @@ The plugin registers into the `conversation.chat.assistant-actions` slot (`order
 
 Button labels and tooltips follow the browser language (`zh*` → Chinese, otherwise English).
 
+The host composes the row as `[clock] copy · extraActions · branch`, and our slot's entry is that `extraActions` — so these buttons sit **immediately to the right of the copy icon**.
+
+### Edit your own message (web GUI)
+
+The AI's buttons are per-message; your own messages have no action row a plugin can extend in this DSH build (see [Notes](#notes)). Instead the plugin adds a small ✏️ **Edit mine** control in the composer's tool row (`conversation.input.left`), which opens a full-width editor above the card (`conversation.input.dock`):
+
+1. click **Edit mine** — it loads your most recent own message (injected `user/message` context is skipped);
+2. change the text and press **Save**;
+3. the message is rewritten in the model-visible history — **nothing is sent**, no new turn starts, and the next model request reads the edited text.
+
 ### `/context` command
 
 `/context` on its own (or `/context list`) prints the current model-visible nodes — the last 10, as `[seq] AI|TOOL|YOU <preview>`, with rewritten nodes marked — followed by the usage list.
@@ -121,6 +131,7 @@ Routes are registered under `/api/dsh-context-surgery` (prefix registration). `G
 | Method | Path | Parameters |
 |---|---|---|
 | GET | `/list` (or `/`) | `?sessionId=<id>&limit=<n>` — `limit` = last N rows; omitted or 0 = all. |
+| GET | `/last-user` | `?sessionId=<id>` — the most recent message you sent, for the composer's *Edit mine* control: `{ ok, found, seq?, messageId?, text?, isRewritten?, sourceKind? }`. Skips injected `user/message` context. Reading only; no top-level check needed. |
 | GET | `/message` | `?sessionId=<id>&messageId=<seq-or-message-id>` — one node split into reply / reasoning. |
 | GET | `/history` | `?sessionId=<id>` — audit trail: in-process journal plus records recovered from the log. |
 | POST | `/edit` | `{ sessionId, seq \| messageId, part?, role?, text }` |
@@ -171,7 +182,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 
 - The model's message list is folded from the session log's **surface** (`Session.deriveMessages()` → request assembly). The log is append-only, but the surface supports **positional replacement**: appending a message event carrying `surfaceOp: { op: "replace", start, end }` plus `sourceEventSeqs` (covering every shadowed node) replaces that contiguous range with the new node. Compaction summaries use the same seam.
 - So a rewrite is always an append: the model's next request reads the edited history, the GUI re-folds the conversation view, and the original text is still in the event log. Nothing in the log is edited in place.
-- `lib/index.js` is the host half: the `/context` command, the six `context_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: the per-message action row, registered through the `conversation.chat.assistant-actions` slot. `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
+- `lib/index.js` is the host half: the `/context` command, the six `context_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
 
 ## `part` semantics
 
@@ -216,6 +227,7 @@ There are no dependencies, and the tests need no DSH runtime: `lib/core.js` and 
 - **Client factory id.** The browser module's id must equal the package name (`dsh-context-surgery`); `lib/client.js` registers itself under that id and returns `{ inject, apply }`.
 - **No `peerDependencies` on purpose.** DSH validates `peerDependencies` ranges for `@deepseek-ai/dsh*` before importing a plugin, and a too-narrow range would block installation. This package therefore declares none and relies on the host services it injects (`commands`, `tools`, `agents`, and `webServer` when present).
 - **HMR vs restart.** Installing a new bundle can take effect through HMR; **replacing an already-installed package of the same name requires a restart** so the new JS modules are loaded.
+- **Why there is no edit button under *your* messages.** This DSH build exposes four `conversation.chat.*` slots: `node`, `commandview`, `turnTail` and `assistant-actions`. The assistant row passes our slot as `extraActions`, so buttons land right after the copy icon; the user row (`UserMessageNodeView`) renders `MessageIconActions` **without** `extraActions` and renders no slot inside the bubble, so no plugin can add a control there. Per the slot contract, a clickable control belongs in the composer tool row (`conversation.input.left`) and taller content in `conversation.input.dock` — which is where this plugin's *Edit mine* control and its editor live. `/context edit <seq> <text>` remains the exact way to rewrite a user message from the command line.
 - **Headless compositions.** The web routes are injected separately (`ctx.inject(["webServer"], …)`), so the command and the tools still work where no web server exists; only the buttons and the HTTP API are missing.
 - The surface-replacement seam this plugin relies on is DeepSeek Harness's; the commit the implementation was written against is recorded in [NOTICE](NOTICE).
 - History rewriting depends on the host exposing `session.surface.nodes`; if a future DSH version stops doing so, the plugin reports that instead of guessing.
