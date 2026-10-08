@@ -44,6 +44,37 @@ test("宿主半边导出官网要求的形式，且不声明顶层 inject", () =
 	}
 });
 
+test("宿主半边不 import 已移除的设置 API，且配置字段都是 volatile", () => {
+	const index = read("lib/index.js");
+	// rc.1 移除了设置命名空间注册 API。静态 import 一个不存在的命名导出会在 ESM 链接期抛错，
+	// 并让整行插件加载失败——host 与 client 两半会一起消失（0.4.2 的真实故障）。
+	assert.doesNotMatch(
+		index,
+		/from\s+["']@deepseek-ai\/dsh-settings["']/,
+		"@deepseek-ai/dsh-settings 不再导出 installSettingsSection / settingsNamespace"
+	);
+	// 可编辑字段必须标 .volatile()：SettingsForms#describe 只对 volatile 字段生成表单，
+	// 漏标会让设置页里这一条变成空表单。
+	const block = index.match(/export const Config = z\.object\(\{([\s\S]*?)\n\}\);/);
+	assert.ok(block, "找不到 Config 定义");
+	const lines = block[1].split("\n");
+	const keys = [...block[1].matchAll(/^\t(\w+):/gm)].map((match) => match[1]);
+	assert.deepEqual(keys, [
+		"exposeTools",
+		"allowToolNodes",
+		"allowRoleChange",
+		"allowModelRoleChange",
+		"httpEnabled",
+		"httpWrite",
+		"auditSize",
+		"maxTextLength"
+	]);
+	for (const key of keys) {
+		const line = lines.find((candidate) => candidate.startsWith(`\t${key}:`));
+		assert.match(line, /\.volatile\(\),?$/, `${key} 必须标 .volatile()`);
+	}
+});
+
 test("清单字段完整（仓库、许可、Node 版本、测试脚本）", () => {
 	assert.equal(manifest.type, "module");
 	assert.equal(manifest.main, "lib/index.js");

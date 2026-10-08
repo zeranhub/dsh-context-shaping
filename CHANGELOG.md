@@ -6,6 +6,21 @@ This repository continues the community plugin `@wasd258/dsh-context-surgery` (0
 
 > **Naming note.** 0.4.0 renamed the project from `dsh-context-surgery` to `dsh-context-shaping`. Entries for earlier releases have been updated to the current identifiers so copied commands still work; the upstream package this project continues is still published as `@wasd258/dsh-context-surgery`.
 
+## [0.4.3] - 2026-10-09
+
+### Fixed
+
+- **The row never loaded on DSH rc.1 and later, because it imported a named export that no longer exists.** `lib/index.js` opened with `import { installSettingsSection, settingsNamespace } from "@deepseek-ai/dsh-settings"`, but that package now exports only `SettingsConflictError`, `SettingsForms` and `redactSecrets`. A static import of a missing named export fails at **ESM link time** — before `apply` is ever called — so the whole plugin row went down with it: no `/shape` command, no `shape_*` tools, no HTTP routes. And because `dsh-client-modules` skips a row whose Loader entry never produced a fiber, no browser module was served either, so the per-message buttons never appeared. The plugin looked installed and did nothing, with nothing logged at the plugin's own level.
+
+### Changed
+
+- **Configuration now uses the rc.1 `.volatile()` contract instead of a registered settings namespace.** All eight `Config` fields are declared `.volatile()`, which is what `SettingsForms#describe()` looks for when it decides whether to generate a form (`volatileForm` returns `undefined` for a non-volatile field); `makeConfigSource().get()` unwraps the live `Volatile<T>` references the Loader passes in for those fields, once per read. Two consequences worth recording: the settings page keeps working — its form is now **generated** for the `context-shaping` row rather than registered under a namespace — and a settings edit applies **live**, without remounting the row or restarting DSH, because `cordis-plugin-loader` commits a volatile-only config change into the running fiber's references (`_commitVolatile`) and emits `loader/volatile-update`.
+
+### Notes
+
+- The Configuration sections of both READMEs no longer claim that the plugin "registers a settings section, namespace `context-shaping`" — that API is gone.
+- `test/manifest.test.js` guards the regression: `lib/index.js` must not import from `@deepseek-ai/dsh-settings`, and every `Config` field must be `.volatile()`.
+
 ## [0.4.2] - 2026-10-07
 
 ### Fixed
