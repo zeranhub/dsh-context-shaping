@@ -1,6 +1,6 @@
 {
   "name": "dsh-context-shaping",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Interactive behavioral shaping for a DeepSeek Harness (DSH) session: rewrite the model-visible conversation history in place (reply text and reasoning chain separately), with an audit trail and undo. 交互式行为塑形：就地改写会话的模型可见历史，回复与思考链分开编辑，并带改写审计与还原。",
   "type": "module",
   "main": "lib/index.js",

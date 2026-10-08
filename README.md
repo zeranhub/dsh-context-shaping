@@ -169,7 +169,7 @@ Routes are registered under `/api/dsh-context-shaping` (prefix registration). `G
 
 ## Configuration
 
-Set these in the DSH settings page (the plugin registers a settings section, namespace `context-shaping`) or in the profile config layer. Everything has a default, so the plugin works unconfigured; a missing settings service is harmless (defaults stay in effect).
+Set these in the DSH settings page — the eight fields are declared `.volatile()` on the plugin's `Config`, so `dsh-settings` generates the form for the `context-shaping` row itself — or in the profile config layer. Everything has a default, so the plugin works unconfigured. Because the Loader hands the plugin live references for volatile fields and `makeConfigSource()` reads them through `get()`, an edit applies **immediately**: the row is not remounted and DSH does not need a restart.
 
 | Key | Default | Effect |
 |---|---|---|
@@ -186,7 +186,7 @@ Set these in the DSH settings page (the plugin registers a settings section, nam
 
 - The model's message list is folded from the session log's **surface** (`Session.deriveMessages()` → request assembly). The log is append-only, but the surface supports **positional replacement**: appending a message event carrying `surfaceOp: { op: "replace", start, end }` plus `sourceEventSeqs` (covering every shadowed node) replaces that contiguous range with the new node. Compaction summaries use the same seam.
 - So a rewrite is always an append: the model's next request reads the edited history, the GUI re-folds the conversation view, and the original text is still in the event log. Nothing in the log is edited in place.
-- `lib/index.js` is the host half: the `/shape` command, the six `shape_*` tools, the HTTP routes and the settings section. `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
+- `lib/index.js` is the host half: the `/shape` command, the six `shape_*` tools, the HTTP routes and the configuration schema (whose `.volatile()` fields drive the auto-generated settings form). `lib/client.js` is the browser half: it registers three slot entries — the per-message action row (`conversation.chat.assistant-actions`), the *Edit mine* control (`conversation.input.left`) and its editor (`conversation.input.dock`). `lib/ops.js` implements the operations against a session object and `lib/core.js` holds the pure helpers (previews, block transforms, command parsing) — both are free of DSH imports, so `node --test` covers them without a DSH runtime.
 
 ## `part` semantics
 
